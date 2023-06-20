@@ -1,8 +1,8 @@
-<script lang="ts">
+<script>
 	let todos = [
-		{ id: 1, title: 'Buy milk' },
-		{ id: 2, title: 'Buy cheese' },
-		{ id: 3, title: 'Buy bread' },
+		{ title: 'Buy milk', completed: true },
+		{ title: 'Buy cheese', completed: false },
+		{ title: 'Buy bread', completed: false },
 	];
 </script>
 
@@ -21,7 +21,10 @@
 		<ul>
 			{#each todos as todo}
 				<li>
-					{todo.title}
+					<div>
+						{todo.title}
+						{todo.completed ? '✅' : ' '}
+					</div>
 					<!-- TODO! -->
 				</li>
 			{/each}
