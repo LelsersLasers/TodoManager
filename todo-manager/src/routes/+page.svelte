@@ -1,8 +1,18 @@
 <script>
+	import { createTodo } from "$lib/firebase/firebase";
+
 	export let data;
 
-	function clearTextInput() {
-		document.getElementById("addTodo").value = "";
+	let todos = data.todos;
+
+	let addTodoText;
+
+	function addTodo() {
+		const todo = {
+			Name: addTodoText,
+			Finished: false
+		}
+		createTodo(todo);
 	}
 </script>
 
@@ -17,9 +27,9 @@
 <main>
 	<h3>Todos</h3>
 
-	{#if data.todos.length > 0}
+	{#if todos.length > 0}
 		<ul>
-			{#each data.todos as todo}
+			{#each todos as todo}
 				<li>
 					<div>
 						{todo.Name}
@@ -32,9 +42,9 @@
 		<p>No todos yet!</p>
 	{/if}
 
-	<form action="?/newTodo" method="POST">
+	<form action="?/newTodo" method="POST" on:submit|preventDefault={addTodo}>
 		<label for="addTodo">Add todo</label>
-		<input type="text" id="addTodo" name="addTodo" placeholder="New todo" required />
+		<input type="text" id="addTodo" name="addTodo" placeholder="New todo" required bind:value={addTodoText} />
 		<input type="submit" value="Create" />
 	</form>
 

@@ -1,15 +1,21 @@
 import { getTodos, createTodo } from '$lib/firebase/firebase'
+import { fail } from '@sveltejs/kit';
 
 export const actions = {
-	newTodo: async ({ request }) => {
-		const formData = await request.formData();
-		const Name = formData.get("addTodo");
-		const todo = {
-			Name,
-			Finished: false
-		}
-		createTodo(todo);
-	}
+	// newTodo: async ({ request }) => {
+	// 	const formData = await request.formData();
+	// 	const Name = formData.get("addTodo");
+
+	// 	if (!Name || Name.length == 0) {
+	// 		return fail(400);
+	// 	}
+
+	// 	const todo = {
+	// 		Name,
+	// 		Finished: false
+	// 	}
+	// 	createTodo(todo);
+	// }
 }
 
 export const load = async () => {
