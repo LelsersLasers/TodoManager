@@ -1,9 +1,9 @@
 <script>
-	let todos = [
-		{ title: 'Buy milk', completed: true },
-		{ title: 'Buy cheese', completed: false },
-		{ title: 'Buy bread', completed: false },
-	];
+	export let data;
+
+	function clearTextInput() {
+		document.getElementById("addTodo").value = "";
+	}
 </script>
 
 
@@ -17,15 +17,14 @@
 <main>
 	<h3>Todos</h3>
 
-	{#if todos.length > 0}
+	{#if data.todos.length > 0}
 		<ul>
-			{#each todos as todo}
+			{#each data.todos as todo}
 				<li>
 					<div>
-						{todo.title}
-						{todo.completed ? '✅' : ' '}
+						{todo.Name}
+						{todo.Finished ? '✅' : '[X]' }
 					</div>
-					<!-- TODO! -->
 				</li>
 			{/each}
 		</ul>
@@ -33,8 +32,10 @@
 		<p>No todos yet!</p>
 	{/if}
 
-	<label for="addTodo">Add todo</label>
-	<input type="text" id="addTodo" name="addTodo" placeholder="New todo" required />
-	<input type="submit" value="Create" />
+	<form action="?/newTodo" method="POST">
+		<label for="addTodo">Add todo</label>
+		<input type="text" id="addTodo" name="addTodo" placeholder="New todo" required />
+		<input type="submit" value="Create" />
+	</form>
 
 </main>
