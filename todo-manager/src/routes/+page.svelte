@@ -26,6 +26,7 @@
 			Finished: false
 		};
 		createTodo(todo);
+		addTodoText = '';
 	}
 </script>
 
@@ -54,7 +55,7 @@
 		<p>No todos yet!</p>
 	{/if}
 
-	<form action="?/newTodo" method="POST" on:submit|preventDefault={addTodo}>
+	<form method="POST" on:submit|preventDefault={addTodo}>
 		<label for="addTodo">Add todo</label>
 		<input
 			type="text"
