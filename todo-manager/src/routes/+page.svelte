@@ -1,11 +1,21 @@
 <script>
-	import { createTodo } from "$lib/firebase/firebase";
+	import { createTodo, createListener } from "$lib/firebase/firebase";
+	import { onDestroy, onMount } from "svelte";
 
 	export let data;
 
 	let todos = data.todos;
 
 	let addTodoText;
+
+	let unsub;
+	onMount(() => {
+		unsub = createListener((x) => x, (arr) => todos = arr);
+	});
+
+	onDestroy(() => {
+		if (unsub) unsub()
+	});
 
 	function addTodo() {
 		const todo = {

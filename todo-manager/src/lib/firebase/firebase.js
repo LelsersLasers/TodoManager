@@ -3,7 +3,7 @@ import { initializeApp } from "firebase/app";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
-import { getFirestore, collection, getDocs, query, orderBy, addDoc } from "firebase/firestore";
+import { getFirestore, collection, getDocs, query, orderBy, addDoc, onSnapshot } from "firebase/firestore";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -40,4 +40,13 @@ export async function getTodos() {
 export async function createTodo(todo) {
 	const doc = await addDoc(todosCol, todo);
 	return doc;
+}
+
+export function createListener(mapCallback, postMapCallback) {
+	const unsubscribe = onSnapshot(q, (querySnapshot) => {
+		const arr = querySnapshot.docs.map((d) => d.data()).map(mapCallback);
+		postMapCallback(arr);
+	});
+	return unsubscribe;
+
 }
