@@ -18,11 +18,10 @@
 // 	// }
 // }
 
-
-import { getTodos } from '$lib/firebase/firebase'
+import { getTodos } from '$lib/firebase/firebase';
 export const load = async () => {
 	const todos = getTodos();
 	return {
 		todos
-	}
-}
+	};
+};

@@ -1,6 +1,6 @@
 <script>
-	import { createTodo, createListener } from "$lib/firebase/firebase";
-	import { onDestroy, onMount } from "svelte";
+	import { createTodo, createListener } from '$lib/firebase/firebase';
+	import { onDestroy, onMount } from 'svelte';
 
 	export let data;
 
@@ -10,22 +10,24 @@
 
 	let unsub;
 	onMount(() => {
-		unsub = createListener((x) => x, (arr) => todos = arr);
+		unsub = createListener(
+			(x) => x,
+			(arr) => (todos = arr)
+		);
 	});
 
 	onDestroy(() => {
-		if (unsub) unsub()
+		if (unsub) unsub();
 	});
 
 	function addTodo() {
 		const todo = {
 			Name: addTodoText,
 			Finished: false
-		}
+		};
 		createTodo(todo);
 	}
 </script>
-
 
 <header>
 	<hgroup>
@@ -43,7 +45,7 @@
 				<li>
 					<div>
 						{todo.Name}
-						{todo.Finished ? '✅' : '[X]' }
+						{todo.Finished ? '✅' : '[X]'}
 					</div>
 				</li>
 			{/each}
@@ -54,8 +56,14 @@
 
 	<form action="?/newTodo" method="POST" on:submit|preventDefault={addTodo}>
 		<label for="addTodo">Add todo</label>
-		<input type="text" id="addTodo" name="addTodo" placeholder="New todo" required bind:value={addTodoText} />
+		<input
+			type="text"
+			id="addTodo"
+			name="addTodo"
+			placeholder="New todo"
+			required
+			bind:value={addTodoText}
+		/>
 		<input type="submit" value="Create" />
 	</form>
-
 </main>
