@@ -16,6 +16,9 @@ import {
 	updateDoc
 } from 'firebase/firestore';
 
+import { fail } from '@sveltejs/kit';
+import { goto } from '$app/navigation';
+
 // Your web app's Firebase configuration
 const firebaseConfig = {
 	apiKey: 'AIzaSyAyj9y8A9L9k65mKivTCzfaZDKRqnIBQzo',
@@ -31,13 +34,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-
 const mainCollectionId = 'lists';
 const mainCollection = collection(db, mainCollectionId);
-const mainCollectionQuery = query(mainCollection, orderBy('Timestamp', 'desc'));
+const mainCollectionQuery = query(mainCollection, orderBy('timestamp', 'desc'));
 
 const subCollectionId = 'todos';
-
 
 export async function getMainCollection() {
 	const snapshot = await getDocs(mainCollectionQuery);
@@ -57,13 +58,16 @@ export async function getMainCollection() {
 }
 
 export async function createMainCollection(name) {
+	const trimedName = name.trim();
+	if (!trimedName || trimedName.length === 0) {
+		throw fail(400, { message: 'Name is required' });
+	}
 	const docData = {
-		name,
+		name: trimedName,
 		count: 0,
-		time: serverTimestamp()
+		timestamp: serverTimestamp()
 	};
-	const doc = await addDoc(mainCollection, docData);
-	return doc;
+	addDoc(mainCollection, docData).then((docRef) => goto(`/list/${docRef.id}`));
 }
 
 export async function deleteMainCollection(id) {
@@ -79,13 +83,12 @@ export async function updateMainCollection(id, newName) {
 
 export async function listenerMainCollection(postMapCallback) {
 	const unsubscribe = onSnapshot(mainCollectionQuery, (querySnapshot) => {
-		const arr = querySnapshot.docs
-			.map((d) => {
-				return {
-					...d.data(),
-					id: d.id
-				};
-			});
+		const arr = querySnapshot.docs.map((d) => {
+			return {
+				...d.data(),
+				id: d.id
+			};
+		});
 		postMapCallback(arr);
 	});
 	return unsubscribe;
@@ -104,4 +107,4 @@ lists:
 		- name
 		- timestamp (sorted by this - 2)
 		- finished (sorted by this - desc - 1)
-`
+`;
