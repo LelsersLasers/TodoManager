@@ -4,16 +4,16 @@ import { initializeApp } from 'firebase/app';
 // https://firebase.google.com/docs/web/setup#available-libraries
 
 import {
-	getFirestore
-	// collection,
-	// getDocs,
-	// query,
-	// orderBy,
-	// addDoc,
-	// onSnapshot,
-	// serverTimestamp,
-	// doc,
-	// updateDoc
+	getFirestore,
+	collection,
+	getDocs,
+	query,
+	orderBy,
+	addDoc,
+	onSnapshot,
+	serverTimestamp,
+	doc,
+	updateDoc
 } from 'firebase/firestore';
 
 // Your web app's Firebase configuration
@@ -30,3 +30,78 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+
+const mainCollectionId = 'lists';
+const mainCollection = collection(db, mainCollectionId);
+const mainCollectionQuery = query(mainCollection, orderBy('Timestamp', 'desc'));
+
+const subCollectionId = 'todos';
+
+
+export async function getMainCollection() {
+	const snapshot = await getDocs(mainCollectionQuery);
+
+	if (!snapshot.empty) {
+		const docs = snapshot.docs;
+		const docData = docs.map((d) => {
+			return {
+				...d.data(),
+				id: d.id
+			};
+		});
+		return docData;
+	} else {
+		return [];
+	}
+}
+
+export async function createMainCollection(name) {
+	const docData = {
+		name,
+		count: 0,
+		time: serverTimestamp()
+	};
+	const doc = await addDoc(mainCollection, docData);
+	return doc;
+}
+
+export async function deleteMainCollection(id) {
+	// TODO! delete subcollection too
+}
+
+export async function updateMainCollection(id, newName) {
+	const docRef = doc(db, mainCollectionId, id);
+	await updateDoc(docRef, {
+		name: newName
+	});
+}
+
+export async function listenerMainCollection(postMapCallback) {
+	const unsubscribe = onSnapshot(mainCollectionQuery, (querySnapshot) => {
+		const arr = querySnapshot.docs
+			.map((d) => {
+				return {
+					...d.data(),
+					id: d.id
+				};
+			});
+		postMapCallback(arr);
+	});
+	return unsubscribe;
+}
+
+`
+db format:
+
+lists: 
+	- auto id
+	- name
+	- timestamp (sorted by this)
+	- count (number of todos)
+	- todos:
+		- auto id
+		- name
+		- timestamp (sorted by this - 2)
+		- finished (sorted by this - desc - 1)
+`
