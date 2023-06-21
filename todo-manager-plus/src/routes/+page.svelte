@@ -1,9 +1,13 @@
 <script>
-	import { listenerMainCollection, createMainCollection } from '$lib/firebase/firebase';
+	import { listenerMainCollection, createMainCollection, updateMainCollection } from '$lib/firebase/firebase';
 	import { onDestroy, onMount } from 'svelte';
 
 	import Modal from '$lib/components/Modal.svelte';
 	let showCreateListModal = false;
+
+	let showEditListModal = false;
+	let editingListId = '';
+	let editingListName = '';
 
 	let snapshotLoading = true;
 
@@ -17,9 +21,23 @@
 	onDestroy(unsubFromLists);
 
 	let createListText = '';
-	async function createList() {
+	function createList() {
 		createMainCollection(createListText);
 		createListText = '';
+		showCreateListModal = false;
+	}
+
+	function startEditingList(id, name) {
+		editingListId = id;
+		editingListName = name;
+		showEditListModal = true;
+	}
+	function editList() {
+		updateMainCollection(editingListId, editingListName)
+
+		editingListId = '';
+		editingListName = '';
+		showEditListModal = false;
 	}
 </script>
 
@@ -55,8 +73,8 @@
 							<td class="zeroWidth">{list.count}</td>
 							<td class="zeroWidth">
 								<kbd
-									on:click={console.log(list.id)}
-									on:keydown={console.log(list.id)}
+									on:click={startEditingList(list.id, list.name)}
+									on:keydown={startEditingList(list.id, list.name)}
 									style="cursor: pointer;">Edit</kbd
 								>
 							</td>
@@ -90,6 +108,23 @@
 						bind:value={createListText}
 					/>
 					<input type="submit" value="Create" />
+				</form>
+			</article>
+		</Modal>
+
+		<Modal bind:showModal={showEditListModal}>
+			<article class="zeroBottomPadding">
+				<form method="POST" on:submit|preventDefault={editList}>
+					<label for="editList">Create todo list</label>
+					<input
+						type="text"
+						id="editList"
+						name="editList"
+						placeholder="List name"
+						required
+						bind:value={editingListName}
+					/>
+					<input type="submit" value="Update" />
 				</form>
 			</article>
 		</Modal>
