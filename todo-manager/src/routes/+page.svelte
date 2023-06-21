@@ -1,5 +1,5 @@
 <script>
-	import { createTodo, createListener } from '$lib/firebase/firebase';
+	import { createTodo, setFinished, createListener } from '$lib/firebase/firebase';
 	import { onDestroy, onMount } from 'svelte';
 
 	export let data;
@@ -28,6 +28,10 @@
 		createTodo(todo);
 		addTodoText = '';
 	}
+
+	// function updateTodo(id, checked) {
+	// 	// TODO
+	// }
 </script>
 
 <header>
@@ -41,16 +45,24 @@
 	<h3>Todos</h3>
 
 	{#if todos.length > 0}
-		<ul>
+		<table>
+			<tr>
+				<th>Name</th>
+				<th>Finished</th>
+			</tr>
 			{#each todos as todo}
-				<li>
-					<div>
-						{todo.Name}
-						{todo.Finished ? '✅' : '[X]'}
-					</div>
-				</li>
+				<tr>
+					<th>{todo.Name}</th>
+					<th>
+						<input
+							type="checkbox"
+							bind:checked={todo.Finished}
+							on:change={setFinished(todo.id, todo.Finished)}
+						/>
+					</th>
+				</tr>
 			{/each}
-		</ul>
+		</table>
 	{:else}
 		<p>No todos yet!</p>
 	{/if}

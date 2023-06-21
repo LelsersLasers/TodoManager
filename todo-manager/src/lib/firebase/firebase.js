@@ -10,7 +10,10 @@ import {
 	query,
 	orderBy,
 	addDoc,
-	onSnapshot
+	onSnapshot,
+	serverTimestamp,
+	doc,
+	updateDoc
 } from 'firebase/firestore';
 
 // Your web app's Firebase configuration
@@ -29,14 +32,21 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const todosCol = collection(db, 'todo');
-const q = query(todosCol, orderBy('Finished'));
+const q = query(todosCol, orderBy('Finished'), orderBy('Timestamp', 'desc'));
 
 export async function getTodos() {
 	const snapshot = await getDocs(q);
 
 	if (!snapshot.empty) {
 		const docs = snapshot.docs;
-		const docData = docs.map((d) => d.data());
+		const docData = docs.map((d) => {
+			return {
+				...d.data(),
+				id: d.id
+			};
+		});
+
+		// console.log(docs);
 
 		return docData;
 	} else {
@@ -45,13 +55,33 @@ export async function getTodos() {
 }
 
 export async function createTodo(todo) {
-	const doc = await addDoc(todosCol, todo);
+	const todoWithTimestamp = {
+		...todo,
+		Timestamp: serverTimestamp()
+	};
+	const doc = await addDoc(todosCol, todoWithTimestamp);
 	return doc;
 }
 
+export async function setFinished(id, finished) {
+	const docRef = doc(db, 'todo', id);
+	await updateDoc(docRef, {
+		Finished: finished
+	});
+}
+
+// export function set
+
 export function createListener(mapCallback, postMapCallback) {
 	const unsubscribe = onSnapshot(q, (querySnapshot) => {
-		const arr = querySnapshot.docs.map((d) => d.data()).map(mapCallback);
+		const arr = querySnapshot.docs
+			.map((d) => {
+				return {
+					...d.data(),
+					id: d.id
+				};
+			})
+			.map(mapCallback);
 		postMapCallback(arr);
 	});
 	return unsubscribe;

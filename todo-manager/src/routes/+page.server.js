@@ -20,7 +20,19 @@
 
 import { getTodos } from '$lib/firebase/firebase';
 export const load = async () => {
-	const todos = getTodos();
+	const todos = (await getTodos()).map((t) => {
+		// WHY IS THIS NEEDED????????
+		const obj = {};
+		for (let key in t) {
+			if (key == 'Timestamp') {
+				obj[key] = t[key].toString();
+			} else {
+				obj[key] = t[key];
+			}
+		}
+		return obj;
+	});
+
 	return {
 		todos
 	};
