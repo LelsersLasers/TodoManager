@@ -14,7 +14,7 @@ import {
 	serverTimestamp,
 	doc,
 	updateDoc,
-	deleteDoc,
+	deleteDoc
 } from 'firebase/firestore';
 
 import { fail } from '@sveltejs/kit';
@@ -104,7 +104,6 @@ export async function listenerMainCollection(postMapCallback) {
 	});
 	return unsubscribe;
 }
-
 
 async function getSubCollectionSnapshot(id) {
 	const subCollection = collection(db, mainCollectionId, id, subCollectionId);

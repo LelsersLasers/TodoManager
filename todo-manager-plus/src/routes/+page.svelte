@@ -3,11 +3,13 @@
 		listenerMainCollection,
 		createMainCollection,
 		updateMainCollection,
-		deleteMainCollection,
+		deleteMainCollection
 	} from '$lib/firebase/firebase';
 	import { onDestroy, onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 
 	import Modal from '$lib/components/Modal.svelte';
+
 	let showCreateListModal = false;
 
 	let showEditListModal = false;
@@ -59,9 +61,13 @@
 		deletingListConfirmation = false;
 		showDeleteListModal = false;
 	}
+
+	function redirectToList(id) {
+		goto(`/list/${id}`);
+	}
 </script>
 
-<header>
+<header class="zeroBottomPadding">
 	<hgroup>
 		<h1>Todo Manager<sup>+</sup></h1>
 		<h2>Managing your todos has never been this easy</h2>
@@ -71,12 +77,12 @@
 <hr />
 
 <main>
-	<h4 class="zeroBottomMargin">Todo lists:</h4>
 	{#if snapshotLoading}
 		<h5>Loading</h5>
 		<article aria-busy="true" />
 	{:else}
 		{#if lists.length > 0}
+			<h4 class="zeroBottomMargin">Todo lists:</h4>
 			<table>
 				<thead>
 					<tr>
@@ -88,20 +94,24 @@
 				</thead>
 				<tbody>
 					{#each lists as list}
-						<tr>
+						<tr
+							on:click={redirectToList(list.id)}
+							on:keydown={redirectToList(list.id)}
+							style="cursor: pointer;"
+						>
 							<td>{list.name}</td>
 							<td class="zeroWidth">{list.count}</td>
 							<td class="zeroWidth">
 								<kbd
-									on:click={startEditingList(list.id, list.name)}
-									on:keydown={startEditingList(list.id, list.name)}
+									on:click|stopPropagation={startEditingList(list.id, list.name)}
+									on:keydown|stopPropagation={startEditingList(list.id, list.name)}
 									style="cursor: pointer;">Edit</kbd
 								>
 							</td>
 							<td class="zeroWidth">
 								<kbd
-									on:click={startDeletingList(list.id)}
-									on:keydown={startDeletingList(list.id)}
+									on:click|stopPropagation={startDeletingList(list.id)}
+									on:keydown|stopPropagation={startDeletingList(list.id)}
 									style="cursor: pointer;">Delete</kbd
 								>
 							</td>
@@ -110,9 +120,17 @@
 				</tbody>
 			</table>
 		{:else}
-			<article>
+			<article class="zeroTopMargin">
 				<h2>No todo lists yet!</h2>
-				<p>Click the <kbd>Create</kbd> button to get started!</p>
+				<p>
+					Click the
+					<kbd
+						on:click={() => (showCreateListModal = true)}
+						on:keydown={() => (showCreateListModal = true)}
+						style="cursor: pointer;">Create</kbd
+					>
+					button to get started!
+				</p>
 			</article>
 		{/if}
 
@@ -162,10 +180,16 @@
 
 					<label for="deleteList">
 						Are you sure you want to delete this list?
-						<input type="checkbox" role="switch" id="deleteList" name="deleteList" bind:checked={deletingListConfirmation} />
+						<input
+							type="checkbox"
+							role="switch"
+							id="deleteList"
+							name="deleteList"
+							bind:checked={deletingListConfirmation}
+						/>
 					</label>
 
-					<input type="submit" value="Delete" disabled='{!deletingListConfirmation}' />
+					<input type="submit" value="Delete" disabled={!deletingListConfirmation} />
 				</form>
 			</article>
 		</Modal>
@@ -183,6 +207,10 @@
 
 	.zeroBottomMargin {
 		margin-bottom: 0;
+	}
+
+	.zeroTopMargin {
+		margin-top: 0;
 	}
 
 	.zeroBottomPadding {
