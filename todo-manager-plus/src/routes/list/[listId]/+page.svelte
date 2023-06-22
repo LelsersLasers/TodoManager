@@ -1,82 +1,83 @@
 <script>
-	import {
-		listenerMainCollection,
-		createMainCollection,
-		updateMainCollection,
-		deleteMainCollection
-	} from '$lib/firebase/firebase';
-	import { onDestroy, onMount } from 'svelte';
-	import { goto } from '$app/navigation';
+	export let data;
+	// import {
+	// 	listenerMainCollection,
+	// 	createMainCollection,
+	// 	updateMainCollection,
+	// 	deleteMainCollection
+	// } from '$lib/firebase/firebase';
+	// import { onDestroy, onMount } from 'svelte';
+	// import { goto } from '$app/navigation';
 
-	import Modal from '$lib/components/Modal.svelte';
+	// import Modal from '$lib/components/Modal.svelte';
 
-	let showCreateListModal = false;
+	// let showCreateListModal = false;
 
-	let showEditListModal = false;
-	let editingListId = '';
-	let editingListName = '';
+	// let showEditListModal = false;
+	// let editingListId = '';
+	// let editingListName = '';
 
-	let showDeleteListModal = false;
-	let deletingListId = '';
-	let deletingListConfirmation = false;
+	// let showDeleteListModal = false;
+	// let deletingListId = '';
+	// let deletingListConfirmation = false;
 
-	let snapshotLoading = true;
+	// let snapshotLoading = true;
 
-	let lists = [];
-	let unsubFromLists = () => {};
-	onMount(() => {
-		unsubFromLists = listenerMainCollection((arr) => (lists = arr));
-		if (snapshotLoading) snapshotLoading = false;
-	});
-	onDestroy(unsubFromLists);
+	// let lists = [];
+	// let unsubFromLists = () => {};
+	// onMount(() => {
+	// 	unsubFromLists = listenerMainCollection((arr) => (lists = arr));
+	// 	if (snapshotLoading) snapshotLoading = false;
+	// });
+	// onDestroy(unsubFromLists);
 
-	let createListText = '';
-	function createList() {
-		createMainCollection(createListText);
-		createListText = '';
-		showCreateListModal = false;
-	}
+	// let createListText = '';
+	// function createList() {
+	// 	createMainCollection(createListText);
+	// 	createListText = '';
+	// 	showCreateListModal = false;
+	// }
 
-	function startEditingList(id, name) {
-		editingListId = id;
-		editingListName = name;
-		showEditListModal = true;
-	}
-	function editList() {
-		updateMainCollection(editingListId, editingListName);
+	// function startEditingList(id, name) {
+	// 	editingListId = id;
+	// 	editingListName = name;
+	// 	showEditListModal = true;
+	// }
+	// function editList() {
+	// 	updateMainCollection(editingListId, editingListName);
 
-		editingListId = '';
-		editingListName = '';
-		showEditListModal = false;
-	}
+	// 	editingListId = '';
+	// 	editingListName = '';
+	// 	showEditListModal = false;
+	// }
 
-	function startDeletingList(id) {
-		deletingListId = id;
-		showDeleteListModal = true;
-	}
-	function deleteList() {
-		deleteMainCollection(deletingListId);
+	// function startDeletingList(id) {
+	// 	deletingListId = id;
+	// 	showDeleteListModal = true;
+	// }
+	// function deleteList() {
+	// 	deleteMainCollection(deletingListId);
 
-		deletingListId = '';
-		deletingListConfirmation = false;
-		showDeleteListModal = false;
-	}
+	// 	deletingListId = '';
+	// 	deletingListConfirmation = false;
+	// 	showDeleteListModal = false;
+	// }
 
-	function redirectToList(id) {
-		goto(`/list/${id}`);
-	}
+	// function redirectToList(id) {
+	// 	goto(`/list/${id}`);
+	// }
 </script>
 
 <header class="zeroBottomPadding">
 	<hgroup>
-		<h1>Todo Manager<sup>+</sup></h1>
-		<h2>Managing your todos has never been this easy</h2>
+		<h1>{data.name}</h1>
+		<h2>Created on {data.createdOn}</h2>
 	</hgroup>
 </header>
 
 <hr />
 
-<main>
+<!-- <main>
 	{#if snapshotLoading}
 		<h5>Loading</h5>
 		<article aria-busy="true" />
@@ -194,4 +195,4 @@
 			</article>
 		</Modal>
 	{/if}
-</main>
+</main> -->

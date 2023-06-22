@@ -1,0 +1,25 @@
+.zeroWidth {
+	width: 0%;
+}
+
+.eightyWidth {
+	width: 80%;
+}
+
+.zeroBottomMargin {
+	margin-bottom: 0;
+}
+
+.zeroTopMargin {
+	margin-top: 0;
+}
+
+.zeroBottomPadding {
+	padding-bottom: 0;
+}
+
+.stickyFooter {
+	position: fixed;
+	left: 10%;
+	bottom: 0;
+}

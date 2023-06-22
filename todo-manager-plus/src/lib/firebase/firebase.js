@@ -14,10 +14,11 @@ import {
 	serverTimestamp,
 	doc,
 	updateDoc,
-	deleteDoc
+	deleteDoc,
+	getDoc
 } from 'firebase/firestore';
 
-import { fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import { goto } from '$app/navigation';
 
 // Your web app's Firebase configuration
@@ -56,6 +57,20 @@ export async function getMainCollection() {
 		return docData;
 	} else {
 		return [];
+	}
+}
+
+export async function getMainCollectionDoc(id) {
+	const docRef = doc(db, mainCollectionId, id);
+	const docSnap = await getDoc(docRef);
+
+	if (docSnap.exists()) {
+		return {
+			...docSnap.data(),
+			id: docSnap.id
+		};
+	} else {
+		throw redirect(404, '/');
 	}
 }
 
