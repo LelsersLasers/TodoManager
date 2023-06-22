@@ -13,7 +13,8 @@ import {
 	onSnapshot,
 	serverTimestamp,
 	doc,
-	updateDoc
+	updateDoc,
+	deleteDoc,
 } from 'firebase/firestore';
 
 import { fail } from '@sveltejs/kit';
@@ -39,6 +40,7 @@ const mainCollection = collection(db, mainCollectionId);
 const mainCollectionQuery = query(mainCollection, orderBy('timestamp', 'desc'));
 
 const subCollectionId = 'todos';
+const subCollectionQueryParams = [orderBy('finished'), orderBy('timestamp', 'desc')];
 
 export async function getMainCollection() {
 	const snapshot = await getDocs(mainCollectionQuery);
@@ -71,7 +73,16 @@ export async function createMainCollection(name) {
 }
 
 export async function deleteMainCollection(id) {
-	// TODO! delete subcollection too
+	const subCollectionSnapshot = await getSubCollectionSnapshot(id);
+	if (!subCollectionSnapshot.empty) {
+		const subCollectionDocs = subCollectionSnapshot.docs;
+		subCollectionDocs.forEach((d) => {
+			deleteDoc(d.ref);
+		});
+	}
+
+	const docRef = doc(db, mainCollectionId, id);
+	await deleteDoc(docRef);
 }
 
 export async function updateMainCollection(id, newName) {
@@ -92,6 +103,31 @@ export async function listenerMainCollection(postMapCallback) {
 		postMapCallback(arr);
 	});
 	return unsubscribe;
+}
+
+
+async function getSubCollectionSnapshot(id) {
+	const subCollection = collection(db, mainCollectionId, id, subCollectionId);
+	const subCollectionQuery = query(subCollection, ...subCollectionQueryParams);
+	const snapshot = await getDocs(subCollectionQuery);
+	return snapshot;
+}
+
+export async function getSubCollection(id) {
+	const snapshot = await getSubCollectionSnapshot(id);
+
+	if (!snapshot.empty) {
+		const docs = snapshot.docs;
+		const docData = docs.map((d) => {
+			return {
+				...d.data(),
+				id: d.id
+			};
+		});
+		return docData;
+	} else {
+		return [];
+	}
 }
 
 `

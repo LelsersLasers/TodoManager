@@ -1,5 +1,10 @@
 <script>
-	import { listenerMainCollection, createMainCollection, updateMainCollection } from '$lib/firebase/firebase';
+	import {
+		listenerMainCollection,
+		createMainCollection,
+		updateMainCollection,
+		deleteMainCollection,
+	} from '$lib/firebase/firebase';
 	import { onDestroy, onMount } from 'svelte';
 
 	import Modal from '$lib/components/Modal.svelte';
@@ -9,6 +14,10 @@
 	let editingListId = '';
 	let editingListName = '';
 
+	let showDeleteListModal = false;
+	let deletingListId = '';
+	let deletingListConfirmation = false;
+
 	let snapshotLoading = true;
 
 	let lists = [];
@@ -17,7 +26,6 @@
 		unsubFromLists = listenerMainCollection((arr) => (lists = arr));
 		if (snapshotLoading) snapshotLoading = false;
 	});
-
 	onDestroy(unsubFromLists);
 
 	let createListText = '';
@@ -33,11 +41,23 @@
 		showEditListModal = true;
 	}
 	function editList() {
-		updateMainCollection(editingListId, editingListName)
+		updateMainCollection(editingListId, editingListName);
 
 		editingListId = '';
 		editingListName = '';
 		showEditListModal = false;
+	}
+
+	function startDeletingList(id) {
+		deletingListId = id;
+		showDeleteListModal = true;
+	}
+	function deleteList() {
+		deleteMainCollection(deletingListId);
+
+		deletingListId = '';
+		deletingListConfirmation = false;
+		showDeleteListModal = false;
 	}
 </script>
 
@@ -78,7 +98,13 @@
 									style="cursor: pointer;">Edit</kbd
 								>
 							</td>
-							<td class="zeroWidth"><kbd>Delete</kbd></td>
+							<td class="zeroWidth">
+								<kbd
+									on:click={startDeletingList(list.id)}
+									on:keydown={startDeletingList(list.id)}
+									style="cursor: pointer;">Delete</kbd
+								>
+							</td>
 						</tr>
 					{/each}
 				</tbody>
@@ -86,7 +112,7 @@
 		{:else}
 			<article>
 				<h2>No todo lists yet!</h2>
-				<p>Click the <kbd>+</kbd> to get started!</p>
+				<p>Click the <kbd>Create</kbd> button to get started!</p>
 			</article>
 		{/if}
 
@@ -115,7 +141,7 @@
 		<Modal bind:showModal={showEditListModal}>
 			<article class="zeroBottomPadding">
 				<form method="POST" on:submit|preventDefault={editList}>
-					<label for="editList">Create todo list</label>
+					<label for="editList">Update list name</label>
 					<input
 						type="text"
 						id="editList"
@@ -125,6 +151,21 @@
 						bind:value={editingListName}
 					/>
 					<input type="submit" value="Update" />
+				</form>
+			</article>
+		</Modal>
+
+		<Modal bind:showModal={showDeleteListModal}>
+			<article class="zeroBottomPadding">
+				<form method="POST" on:submit|preventDefault={deleteList}>
+					<label for="deleteList">Delete todo list</label>
+
+					<label for="deleteList">
+						Are you sure you want to delete this list?
+						<input type="checkbox" role="switch" id="deleteList" name="deleteList" bind:checked={deletingListConfirmation} />
+					</label>
+
+					<input type="submit" value="Delete" disabled='{!deletingListConfirmation}' />
 				</form>
 			</article>
 		</Modal>

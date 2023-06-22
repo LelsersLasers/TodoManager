@@ -3,7 +3,8 @@
 
 	let dialog; // HTMLDialogElement
 
-	$: if (dialog) { // if dialog is defined
+	$: if (dialog) {
+		// if dialog is defined
 		if (showModal) {
 			dialog.showModal();
 		} else {
