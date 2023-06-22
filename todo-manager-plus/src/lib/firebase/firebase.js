@@ -15,7 +15,8 @@ import {
 	doc,
 	updateDoc,
 	deleteDoc,
-	getDoc
+	getDoc,
+	setDoc
 } from 'firebase/firestore';
 
 import { fail, redirect } from '@sveltejs/kit';
@@ -43,22 +44,22 @@ const mainCollectionQuery = query(mainCollection, orderBy('timestamp', 'desc'));
 const subCollectionId = 'todos';
 const subCollectionQueryParams = [orderBy('finished'), orderBy('timestamp', 'desc')];
 
-export async function getMainCollection() {
-	const snapshot = await getDocs(mainCollectionQuery);
+// export async function getMainCollection() {
+// 	const snapshot = await getDocs(mainCollectionQuery);
 
-	if (!snapshot.empty) {
-		const docs = snapshot.docs;
-		const docData = docs.map((d) => {
-			return {
-				...d.data(),
-				id: d.id
-			};
-		});
-		return docData;
-	} else {
-		return [];
-	}
-}
+// 	if (!snapshot.empty) {
+// 		const docs = snapshot.docs;
+// 		const docData = docs.map((d) => {
+// 			return {
+// 				...d.data(),
+// 				id: d.id
+// 			};
+// 		});
+// 		return docData;
+// 	} else {
+// 		return [];
+// 	}
+// }
 
 export async function getMainCollectionDoc(id) {
 	const docRef = doc(db, mainCollectionId, id);
@@ -120,28 +121,85 @@ export async function listenerMainCollection(postMapCallback) {
 	return unsubscribe;
 }
 
-async function getSubCollectionSnapshot(id) {
+function getSubCollectionQuery(id) {
 	const subCollection = collection(db, mainCollectionId, id, subCollectionId);
 	const subCollectionQuery = query(subCollection, ...subCollectionQueryParams);
+	return subCollectionQuery;
+}
+
+async function getSubCollectionSnapshot(id) {
+	const subCollectionQuery = getSubCollectionQuery(id);
 	const snapshot = await getDocs(subCollectionQuery);
 	return snapshot;
 }
 
-export async function getSubCollection(id) {
-	const snapshot = await getSubCollectionSnapshot(id);
+// export async function getSubCollection(id) {
+// 	const snapshot = await getSubCollectionSnapshot(id);
 
-	if (!snapshot.empty) {
-		const docs = snapshot.docs;
-		const docData = docs.map((d) => {
+// 	if (!snapshot.empty) {
+// 		const docs = snapshot.docs;
+// 		const docData = docs.map((d) => {
+// 			return {
+// 				...d.data(),
+// 				id: d.id
+// 			};
+// 		});
+// 		return docData;
+// 	} else {
+// 		return [];
+// 	}
+// }
+
+export async function createSubCollection(id, name) {
+	const trimedName = name.trim();
+	if (!trimedName || trimedName.length === 0) {
+		throw fail(400, { message: 'Name is required' });
+	}
+
+	const docData = {
+		name: trimedName,
+		finished: false,
+		timestamp: serverTimestamp()
+	};
+
+	const subCollectionDoc = doc(collection(db, mainCollectionId, id, subCollectionId));
+	await setDoc(subCollectionDoc, {
+		...docData,
+		id: subCollectionDoc.id
+	});
+}
+
+export async function deleteSubCollection(id, subId) {
+	const docRef = doc(db, mainCollectionId, id, subCollectionId, subId);
+	await deleteDoc(docRef);
+}
+
+export async function updateSubCollection(id, subId, newName) {
+	const docRef = doc(db, mainCollectionId, id, subCollectionId, subId);
+	await updateDoc(docRef, {
+		name: newName
+	});
+}
+
+export async function updateSubCollectionFinished(id, subId, newFinished) {
+	const docRef = doc(db, mainCollectionId, id, subCollectionId, subId);
+	await updateDoc(docRef, {
+		finished: newFinished
+	});
+}
+
+export async function listenerSubCollection(id, postMapCallback) {
+	const subCollectionQuery = getSubCollectionQuery(id);
+	const unsubscribe = onSnapshot(subCollectionQuery, (querySnapshot) => {
+		const arr = querySnapshot.docs.map((d) => {
 			return {
 				...d.data(),
 				id: d.id
 			};
 		});
-		return docData;
-	} else {
-		return [];
-	}
+		postMapCallback(arr);
+	});
+	return unsubscribe;
 }
 
 `

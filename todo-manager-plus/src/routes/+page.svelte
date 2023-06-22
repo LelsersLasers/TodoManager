@@ -25,8 +25,10 @@
 	let lists = [];
 	let unsubFromLists = () => {};
 	onMount(() => {
-		unsubFromLists = listenerMainCollection((arr) => (lists = arr));
-		if (snapshotLoading) snapshotLoading = false;
+		unsubFromLists = listenerMainCollection((arr) => {
+			lists = arr;
+			if (snapshotLoading) snapshotLoading = false;
+		});
 	});
 	onDestroy(unsubFromLists);
 
@@ -79,7 +81,7 @@
 <main>
 	{#if snapshotLoading}
 		<h5>Loading</h5>
-		<article aria-busy="true" />
+		<article class="zeroTopMargin" aria-busy="true" />
 	{:else}
 		{#if lists.length > 0}
 			<h4 class="zeroBottomMargin">Todo lists:</h4>
@@ -149,6 +151,7 @@
 						name="createList"
 						placeholder="List name"
 						required
+						autocomplete="off"
 						bind:value={createListText}
 					/>
 					<input type="submit" value="Create" />
@@ -166,6 +169,7 @@
 						name="editList"
 						placeholder="List name"
 						required
+						autocomplete="off"
 						bind:value={editingListName}
 					/>
 					<input type="submit" value="Update" />

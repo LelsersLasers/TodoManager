@@ -1,55 +1,62 @@
 <script>
 	export let data;
-	// import {
-	// 	listenerMainCollection,
-	// 	createMainCollection,
-	// 	updateMainCollection,
-	// 	deleteMainCollection
-	// } from '$lib/firebase/firebase';
-	// import { onDestroy, onMount } from 'svelte';
+	import {
+		listenerSubCollection,
+		createSubCollection,
+		updateSubCollection,
+		updateSubCollectionFinished,
+		deleteSubCollection
+	} from '$lib/firebase/firebase';
+	import { onDestroy, onMount } from 'svelte';
 	// import { goto } from '$app/navigation';
 
-	// import Modal from '$lib/components/Modal.svelte';
+	import Modal from '$lib/components/Modal.svelte';
 
-	// let showCreateListModal = false;
+	let showCreateTodoModal = false;
 
-	// let showEditListModal = false;
-	// let editingListId = '';
-	// let editingListName = '';
+	let showEditTodoModal = false;
+	let editingTodoId = '';
+	let editingTodoName = '';
 
 	// let showDeleteListModal = false;
 	// let deletingListId = '';
 	// let deletingListConfirmation = false;
 
-	// let snapshotLoading = true;
+	let snapshotLoading = true;
 
-	// let lists = [];
-	// let unsubFromLists = () => {};
-	// onMount(() => {
-	// 	unsubFromLists = listenerMainCollection((arr) => (lists = arr));
-	// 	if (snapshotLoading) snapshotLoading = false;
-	// });
-	// onDestroy(unsubFromLists);
+	let todos = [];
+	let unsubFromTodos = () => {};
+	onMount(() => {
+		unsubFromTodos = listenerSubCollection(data.id, (arr) => {
+			todos = arr;
+			if (snapshotLoading) snapshotLoading = false;
+		});
+	});
+	onDestroy(unsubFromTodos);
 
-	// let createListText = '';
-	// function createList() {
-	// 	createMainCollection(createListText);
-	// 	createListText = '';
-	// 	showCreateListModal = false;
-	// }
+	let createTodoText = '';
+	function createTodo() {
+		createSubCollection(data.id, createTodoText);
+		createTodoText = '';
+		showCreateTodoModal = false;
+	}
 
-	// function startEditingList(id, name) {
-	// 	editingListId = id;
-	// 	editingListName = name;
-	// 	showEditListModal = true;
-	// }
-	// function editList() {
-	// 	updateMainCollection(editingListId, editingListName);
+	function updateTodoFinished(id, finished) {
+		updateSubCollectionFinished(data.id, id, finished);
+	}
 
-	// 	editingListId = '';
-	// 	editingListName = '';
-	// 	showEditListModal = false;
-	// }
+	function startEditingTodo(id, name) {
+		editingTodoId = id;
+		editingTodoName = name;
+		showEditTodoModal = true;
+	}
+	function editList() {
+		updateSubCollection(data.id, editingTodoId, editingTodoName);
+
+		editingTodoId = '';
+		editingTodoName = '';
+		showEditTodoModal = false;
+	}
 
 	// function startDeletingList(id) {
 	// 	deletingListId = id;
@@ -77,57 +84,59 @@
 
 <hr />
 
-<!-- <main>
+<main>
 	{#if snapshotLoading}
 		<h5>Loading</h5>
-		<article aria-busy="true" />
+		<article class="zeroTopMargin" aria-busy="true" />
 	{:else}
-		{#if lists.length > 0}
-			<h4 class="zeroBottomMargin">Todo lists:</h4>
+		{#if todos.length > 0}
+			<h4 class="zeroBottomMargin">Todos:</h4>
 			<table>
 				<thead>
 					<tr>
 						<th><strong>Name</strong></th>
-						<th><strong>#</strong></th>
+						<th><strong>Finished</strong></th>
 						<th />
 						<th />
 					</tr>
 				</thead>
 				<tbody>
-					{#each lists as list}
-						<tr
-							on:click={redirectToList(list.id)}
-							on:keydown={redirectToList(list.id)}
-							style="cursor: pointer;"
-						>
-							<td>{list.name}</td>
-							<td class="zeroWidth">{list.count}</td>
+					{#each todos as todo}
+						<tr>
+							<td>{todo.name}</td>
 							<td class="zeroWidth">
-								<kbd
-									on:click|stopPropagation={startEditingList(list.id, list.name)}
-									on:keydown|stopPropagation={startEditingList(list.id, list.name)}
-									style="cursor: pointer;">Edit</kbd
-								>
+								<input
+									type="checkbox"
+									bind:checked={todo.finished}
+									on:change={updateTodoFinished(todo.id, todo.finished)}
+								/>
 							</td>
 							<td class="zeroWidth">
-								<kbd
-									on:click|stopPropagation={startDeletingList(list.id)}
-									on:keydown|stopPropagation={startDeletingList(list.id)}
-									style="cursor: pointer;">Delete</kbd
-								>
-							</td>
+									<kbd
+										on:click|stopPropagation={startEditingTodo(todo.id, todo.name)}
+										on:keydown|stopPropagation={startEditingTodo(todo.id, todo.name)}
+										style="cursor: pointer;">Edit</kbd
+									>
+								</td>
+								<!-- <td class="zeroWidth">
+									<kbd
+										on:click|stopPropagation={startDeletingList(list.id)}
+										on:keydown|stopPropagation={startDeletingList(list.id)}
+										style="cursor: pointer;">Delete</kbd
+									>
+								</td> -->
 						</tr>
 					{/each}
 				</tbody>
 			</table>
 		{:else}
 			<article class="zeroTopMargin">
-				<h2>No todo lists yet!</h2>
+				<h2>No todos yet!</h2>
 				<p>
 					Click the
 					<kbd
-						on:click={() => (showCreateListModal = true)}
-						on:keydown={() => (showCreateListModal = true)}
+						on:click={() => (showCreateTodoModal = true)}
+						on:keydown={() => (showCreateTodoModal = true)}
 						style="cursor: pointer;">Create</kbd
 					>
 					button to get started!
@@ -137,44 +146,46 @@
 
 		<button
 			class="stickyFooter zeroBottomMargin eightyWidth"
-			on:click={() => (showCreateListModal = true)}>Create new list</button
+			on:click={() => (showCreateTodoModal = true)}>Create new todo</button
 		>
 
-		<Modal bind:showModal={showCreateListModal}>
+		<Modal bind:showModal={showCreateTodoModal}>
 			<article class="zeroBottomPadding">
-				<form method="POST" on:submit|preventDefault={createList}>
-					<label for="createList">Create todo list</label>
+				<form method="POST" on:submit|preventDefault={createTodo}>
+					<label for="createTodo">Create todo</label>
 					<input
 						type="text"
-						id="createList"
-						name="createList"
-						placeholder="List name"
+						id="createTodo"
+						name="createTodo"
+						placeholder="Todo item name"
 						required
-						bind:value={createListText}
+						autocomplete="off"
+						bind:value={createTodoText}
 					/>
 					<input type="submit" value="Create" />
 				</form>
 			</article>
 		</Modal>
 
-		<Modal bind:showModal={showEditListModal}>
+		<Modal bind:showModal={showEditTodoModal}>
 			<article class="zeroBottomPadding">
 				<form method="POST" on:submit|preventDefault={editList}>
-					<label for="editList">Update list name</label>
+					<label for="editTodo">Update todo item name</label>
 					<input
 						type="text"
-						id="editList"
-						name="editList"
-						placeholder="List name"
+						id="editTodo"
+						name="editTodo"
+						placeholder="Todo item name"
 						required
-						bind:value={editingListName}
+						autocomplete="off"
+						bind:value={editingTodoName}
 					/>
 					<input type="submit" value="Update" />
 				</form>
 			</article>
 		</Modal>
 
-		<Modal bind:showModal={showDeleteListModal}>
+		<!-- <Modal bind:showModal={showDeleteListModal}>
 			<article class="zeroBottomPadding">
 				<form method="POST" on:submit|preventDefault={deleteList}>
 					<label for="deleteList">Delete todo list</label>
@@ -193,6 +204,6 @@
 					<input type="submit" value="Delete" disabled={!deletingListConfirmation} />
 				</form>
 			</article>
-		</Modal>
+		</Modal> -->
 	{/if}
-</main> -->
+</main>
