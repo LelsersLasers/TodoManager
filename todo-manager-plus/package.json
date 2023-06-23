@@ -1,6 +1,6 @@
 {
 	"name": "todo-manager-plus",
-	"version": "0.0.1",
+	"version": "1.0.0",
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
@@ -22,7 +22,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@picocss/pico": "^1.5.10",
+		"@sveltejs/adapter-vercel": "^3.0.1",
 		"firebase": "^9.22.2"
 	}
 }
