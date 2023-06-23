@@ -104,11 +104,11 @@
 					{#each todos as todo}
 						<tr>
 							<td>
-							{#if todo.finished}
-								<del>{todo.name}</del>
-							{:else}
-								{todo.name}
-							{/if}
+								{#if todo.finished}
+									<del>{todo.name}</del>
+								{:else}
+									{todo.name}
+								{/if}
 							</td>
 							<td>
 								<input
@@ -118,19 +118,19 @@
 								/>
 							</td>
 							<td class="zeroWidth zeroWidthPadding">
-									<kbd
-										on:click|stopPropagation={startEditingTodo(todo.id, todo.name)}
-										on:keydown|stopPropagation={startEditingTodo(todo.id, todo.name)}
-										style="cursor: pointer;">Edit</kbd
-									>
-								</td>
-								<td class="zeroWidth zeroWidthPadding">
-									<kbd
-										on:click|stopPropagation={startDeletingTodo(todo.id)}
-										on:keydown|stopPropagation={startDeletingTodo(todo.id)}
-										style="cursor: pointer;">Delete</kbd
-									>
-								</td>
+								<kbd
+									on:click|stopPropagation={startEditingTodo(todo.id, todo.name)}
+									on:keydown|stopPropagation={startEditingTodo(todo.id, todo.name)}
+									style="cursor: pointer;">Edit</kbd
+								>
+							</td>
+							<td class="zeroWidth zeroWidthPadding">
+								<kbd
+									on:click|stopPropagation={startDeletingTodo(todo.id)}
+									on:keydown|stopPropagation={startDeletingTodo(todo.id)}
+									style="cursor: pointer;">Delete</kbd
+								>
+							</td>
 						</tr>
 					{/each}
 				</tbody>
@@ -150,10 +150,19 @@
 			</article>
 		{/if}
 
-		<button
-			class="stickyFooter zeroBottomMargin eightyWidth"
-			on:click={() => (showCreateTodoModal = true)}>Create new todo</button
-		>
+		<div class="stickyFooter zeroBottomMargin nintyWidth">
+			<input
+				class="zeroBottomMargin fifteenWidth floatLeft"
+				style="cursor: pointer"
+				type="reset"
+				value="<"
+				on:click|preventDefault={backToHome}
+			/>
+			<button
+				class="zeroBottomMargin eightyWidth floatRight"
+				on:click={() => (showCreateTodoModal = true)}>Create new todo</button
+			>
+		</div>
 
 		<Modal bind:showModal={showCreateTodoModal}>
 			<article class="zeroBottomPadding">

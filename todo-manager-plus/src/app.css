@@ -7,12 +7,28 @@
 	padding-right: 0.25em;
 }
 
-.eightyWidth {
+.nintyWidth {
 	width: 90%;
 }
 
+.floatLeft {
+	float: left;
+}
+
+.floatRight {
+	float: right;
+}
+
+.fifteenWidth {
+	width: 15% !important;
+}
+
+.eightyWidth {
+	width: 80%;
+}
+
 .zeroBottomMargin {
-	margin-bottom: 0;
+	margin-bottom: 0 !important;
 }
 
 .zeroTopMargin {

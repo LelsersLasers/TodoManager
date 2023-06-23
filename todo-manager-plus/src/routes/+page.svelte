@@ -137,7 +137,7 @@
 		{/if}
 
 		<button
-			class="stickyFooter zeroBottomMargin eightyWidth"
+			class="stickyFooter zeroBottomMargin nintyWidth"
 			on:click={() => (showCreateListModal = true)}>Create new list</button
 		>
 
