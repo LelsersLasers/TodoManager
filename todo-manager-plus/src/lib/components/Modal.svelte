@@ -22,7 +22,8 @@
 	<div on:click|stopPropagation>
 		<slot />
 		<!-- svelte-ignore a11y-autofocus -->
-		<button autofocus on:click={() => dialog.close()}>back</button>
+		<input type="reset" value="Back" on:click|preventDefault={() => dialog.close()} />
+		<!-- <button autofocus on:click={() => dialog.close()}>back</button> -->
 	</div>
 </dialog>
 
@@ -61,7 +62,7 @@
 			opacity: 1;
 		}
 	}
-	button {
+	input[type='reset'] {
 		display: block;
 	}
 </style>

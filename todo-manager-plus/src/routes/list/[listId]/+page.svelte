@@ -8,7 +8,7 @@
 		deleteSubCollection
 	} from '$lib/firebase/firebase';
 	import { onDestroy, onMount } from 'svelte';
-	// import { goto } from '$app/navigation';
+	import { goto } from '$app/navigation';
 
 	import Modal from '$lib/components/Modal.svelte';
 
@@ -18,9 +18,9 @@
 	let editingTodoId = '';
 	let editingTodoName = '';
 
-	// let showDeleteListModal = false;
-	// let deletingListId = '';
-	// let deletingListConfirmation = false;
+	let showDeleteTodoModal = false;
+	let deletingTodoId = '';
+	let deletingTodoConfirmation = false;
 
 	let snapshotLoading = true;
 
@@ -58,21 +58,21 @@
 		showEditTodoModal = false;
 	}
 
-	// function startDeletingList(id) {
-	// 	deletingListId = id;
-	// 	showDeleteListModal = true;
-	// }
-	// function deleteList() {
-	// 	deleteMainCollection(deletingListId);
+	function startDeletingTodo(id) {
+		deletingTodoId = id;
+		showDeleteTodoModal = true;
+	}
+	function deleteTodo() {
+		deleteSubCollection(data.id, deletingTodoId);
 
-	// 	deletingListId = '';
-	// 	deletingListConfirmation = false;
-	// 	showDeleteListModal = false;
-	// }
+		deletingTodoId = '';
+		deletingTodoConfirmation = false;
+		showDeleteTodoModal = false;
+	}
 
-	// function redirectToList(id) {
-	// 	goto(`/list/${id}`);
-	// }
+	function backToHome() {
+		goto('/');
+	}
 </script>
 
 <header class="zeroBottomPadding">
@@ -95,7 +95,7 @@
 				<thead>
 					<tr>
 						<th><strong>Name</strong></th>
-						<th><strong>Finished</strong></th>
+						<th class="zeroWidth zeroWidthPadding"><strong>Done</strong></th>
 						<th />
 						<th />
 					</tr>
@@ -103,28 +103,34 @@
 				<tbody>
 					{#each todos as todo}
 						<tr>
-							<td>{todo.name}</td>
-							<td class="zeroWidth">
+							<td>
+							{#if todo.finished}
+								<del>{todo.name}</del>
+							{:else}
+								{todo.name}
+							{/if}
+							</td>
+							<td>
 								<input
 									type="checkbox"
 									bind:checked={todo.finished}
 									on:change={updateTodoFinished(todo.id, todo.finished)}
 								/>
 							</td>
-							<td class="zeroWidth">
+							<td class="zeroWidth zeroWidthPadding">
 									<kbd
 										on:click|stopPropagation={startEditingTodo(todo.id, todo.name)}
 										on:keydown|stopPropagation={startEditingTodo(todo.id, todo.name)}
 										style="cursor: pointer;">Edit</kbd
 									>
 								</td>
-								<!-- <td class="zeroWidth">
+								<td class="zeroWidth zeroWidthPadding">
 									<kbd
-										on:click|stopPropagation={startDeletingList(list.id)}
-										on:keydown|stopPropagation={startDeletingList(list.id)}
+										on:click|stopPropagation={startDeletingTodo(todo.id)}
+										on:keydown|stopPropagation={startDeletingTodo(todo.id)}
 										style="cursor: pointer;">Delete</kbd
 									>
-								</td> -->
+								</td>
 						</tr>
 					{/each}
 				</tbody>
@@ -139,7 +145,7 @@
 						on:keydown={() => (showCreateTodoModal = true)}
 						style="cursor: pointer;">Create</kbd
 					>
-					button to get started!
+					button to add an item!
 				</p>
 			</article>
 		{/if}
@@ -152,7 +158,7 @@
 		<Modal bind:showModal={showCreateTodoModal}>
 			<article class="zeroBottomPadding">
 				<form method="POST" on:submit|preventDefault={createTodo}>
-					<label for="createTodo">Create todo</label>
+					<h1 class="zeroBottomMargin"><label for="createTodo">Create todo</label></h1>
 					<input
 						type="text"
 						id="createTodo"
@@ -185,25 +191,25 @@
 			</article>
 		</Modal>
 
-		<!-- <Modal bind:showModal={showDeleteListModal}>
+		<Modal bind:showModal={showDeleteTodoModal}>
 			<article class="zeroBottomPadding">
-				<form method="POST" on:submit|preventDefault={deleteList}>
-					<label for="deleteList">Delete todo list</label>
+				<form method="POST" on:submit|preventDefault={deleteTodo}>
+					<label for="deleteList">Delete todo</label>
 
 					<label for="deleteList">
-						Are you sure you want to delete this list?
+						Are you sure you want to delete this item?
 						<input
 							type="checkbox"
 							role="switch"
 							id="deleteList"
 							name="deleteList"
-							bind:checked={deletingListConfirmation}
+							bind:checked={deletingTodoConfirmation}
 						/>
 					</label>
 
-					<input type="submit" value="Delete" disabled={!deletingListConfirmation} />
+					<input type="submit" value="Delete" disabled={!deletingTodoConfirmation} />
 				</form>
 			</article>
-		</Modal> -->
+		</Modal>
 	{/if}
 </main>

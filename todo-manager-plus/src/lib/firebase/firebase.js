@@ -16,7 +16,8 @@ import {
 	updateDoc,
 	deleteDoc,
 	getDoc,
-	setDoc
+	setDoc,
+	increment
 } from 'firebase/firestore';
 
 import { fail, redirect } from '@sveltejs/kit';
@@ -167,11 +168,23 @@ export async function createSubCollection(id, name) {
 		...docData,
 		id: subCollectionDoc.id
 	});
+
+	// update list.count
+	const docRef = doc(db, mainCollectionId, id);
+	await updateDoc(docRef, {
+		count: increment(1)
+	});
 }
 
 export async function deleteSubCollection(id, subId) {
 	const docRef = doc(db, mainCollectionId, id, subCollectionId, subId);
 	await deleteDoc(docRef);
+
+	// update list.count
+	const docRef2 = doc(db, mainCollectionId, id);
+	await updateDoc(docRef2, {
+		count: increment(-1)
+	});
 }
 
 export async function updateSubCollection(id, subId, newName) {

@@ -2,8 +2,13 @@
 	width: 0%;
 }
 
+.zeroWidthPadding {
+	padding-left: 0.25em;
+	padding-right: 0.25em;
+}
+
 .eightyWidth {
-	width: 80%;
+	width: 90%;
 }
 
 .zeroBottomMargin {
@@ -20,6 +25,6 @@
 
 .stickyFooter {
 	position: fixed;
-	left: 10%;
-	bottom: 0;
+	left: 5%;
+	bottom: 2.5%;
 }

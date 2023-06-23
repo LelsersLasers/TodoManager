@@ -89,7 +89,7 @@
 				<thead>
 					<tr>
 						<th><strong>Name</strong></th>
-						<th><strong>#</strong></th>
+						<th class="zeroWidth zeroWidthPadding"><strong>#</strong></th>
 						<th />
 						<th />
 					</tr>
@@ -102,15 +102,15 @@
 							style="cursor: pointer;"
 						>
 							<td>{list.name}</td>
-							<td class="zeroWidth">{list.count}</td>
-							<td class="zeroWidth">
+							<td class="zeroWidth zeroWidthPadding">{list.count}</td>
+							<td class="zeroWidth zeroWidthPadding">
 								<kbd
 									on:click|stopPropagation={startEditingList(list.id, list.name)}
 									on:keydown|stopPropagation={startEditingList(list.id, list.name)}
 									style="cursor: pointer;">Edit</kbd
 								>
 							</td>
-							<td class="zeroWidth">
+							<td class="zeroWidth zeroWidthPadding">
 								<kbd
 									on:click|stopPropagation={startDeletingList(list.id)}
 									on:keydown|stopPropagation={startDeletingList(list.id)}
