@@ -197,7 +197,8 @@ export async function updateSubCollection(id, subId, newName) {
 export async function updateSubCollectionFinished(id, subId, newFinished) {
 	const docRef = doc(db, mainCollectionId, id, subCollectionId, subId);
 	await updateDoc(docRef, {
-		finished: newFinished
+		finished: newFinished,
+		timestamp: serverTimestamp()
 	});
 }
 
