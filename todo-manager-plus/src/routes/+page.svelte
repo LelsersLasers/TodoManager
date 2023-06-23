@@ -144,7 +144,7 @@
 		<Modal bind:showModal={showCreateListModal}>
 			<article class="zeroBottomPadding">
 				<form method="POST" on:submit|preventDefault={createList}>
-					<label for="createList">Create todo list</label>
+					<h1 class="zeroBottomMargin"><label for="createList">Create list</label></h1>
 					<input
 						type="text"
 						id="createList"
@@ -162,7 +162,7 @@
 		<Modal bind:showModal={showEditListModal}>
 			<article class="zeroBottomPadding">
 				<form method="POST" on:submit|preventDefault={editList}>
-					<label for="editList">Update list name</label>
+					<h1 class="zeroBottomMargin"><label for="editList">Update list</label></h1>
 					<input
 						type="text"
 						id="editList"
@@ -180,7 +180,7 @@
 		<Modal bind:showModal={showDeleteListModal}>
 			<article class="zeroBottomPadding">
 				<form method="POST" on:submit|preventDefault={deleteList}>
-					<label for="deleteList">Delete todo list</label>
+					<h1 class="zeroBottomMargin"><label for="deleteList">Delete list</label></h1>
 
 					<label for="deleteList">
 						Are you sure you want to delete this list?

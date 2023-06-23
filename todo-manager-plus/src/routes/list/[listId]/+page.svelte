@@ -155,7 +155,7 @@
 				class="zeroBottomMargin fifteenWidth floatLeft"
 				style="cursor: pointer"
 				type="reset"
-				value="<"
+				value="&blacktriangleleft;"
 				on:click|preventDefault={backToHome}
 			/>
 			<button
@@ -185,7 +185,7 @@
 		<Modal bind:showModal={showEditTodoModal}>
 			<article class="zeroBottomPadding">
 				<form method="POST" on:submit|preventDefault={editList}>
-					<label for="editTodo">Update todo item name</label>
+					<h1 class="zeroBottomMargin"><label for="editTodo">Update todo</label></h1>
 					<input
 						type="text"
 						id="editTodo"
@@ -203,8 +203,7 @@
 		<Modal bind:showModal={showDeleteTodoModal}>
 			<article class="zeroBottomPadding">
 				<form method="POST" on:submit|preventDefault={deleteTodo}>
-					<label for="deleteList">Delete todo</label>
-
+					<h1 class="zeroBottomMargin"><label for="deleteList">Delete todo</label></h1>
 					<label for="deleteList">
 						Are you sure you want to delete this item?
 						<input
