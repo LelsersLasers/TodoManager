@@ -3,7 +3,10 @@
 		listenerMainCollection,
 		createMainCollection,
 		updateMainCollection,
-		deleteMainCollection
+		deleteMainCollection,
+		signInWithGoogle,
+		signOutWithGoogle,
+		currentUserStore
 	} from '$lib/firebase/firebase';
 	import { onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -79,6 +82,9 @@
 <hr />
 
 <main>
+	<button on:click={signInWithGoogle}>Sign in with Google</button>
+	<button on:click={signOutWithGoogle}>Sign out</button>
+	<p>{$currentUserStore}</p>
 	{#if snapshotLoading}
 		<h5>Loading</h5>
 		<article class="zeroTopMargin" aria-busy="true" />

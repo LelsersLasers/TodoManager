@@ -1,8 +1,4 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp } from 'firebase/app';
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
 import {
 	getFirestore,
 	collection,
@@ -19,6 +15,15 @@ import {
 	setDoc,
 	increment
 } from 'firebase/firestore';
+import {
+	getAuth,
+	onAuthStateChanged,
+	signInWithPopup,
+	signOut,
+	GoogleAuthProvider
+} from 'firebase/auth';
+
+import { writable } from 'svelte/store';
 
 import { fail, redirect } from '@sveltejs/kit';
 import { goto } from '$app/navigation';
@@ -34,8 +39,27 @@ const firebaseConfig = {
 	appId: '1:94257088353:web:e172dc575e417731a36720'
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+export const currentUserStore = writable(null);
+onAuthStateChanged(auth, (u) => {
+	currentUserStore.set(u);
+	console.log(u);
+	console.log(currentUserStore);
+});
+
+export async function signInWithGoogle() {
+	await signInWithPopup(auth, provider);
+}
+
+export async function signOutWithGoogle() {
+	// why does this erorr??
+	await signOut(auth);
+}
+
 const db = getFirestore(app);
 
 const mainCollectionId = 'lists';
@@ -224,6 +248,7 @@ lists:
 	- name
 	- timestamp (sorted by this)
 	- count (number of todos)
+    - users (array of user uids)
 	- todos:
 		- auto id
 		- name
