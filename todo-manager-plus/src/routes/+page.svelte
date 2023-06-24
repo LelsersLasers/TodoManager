@@ -8,12 +8,11 @@
 		signOutWithGoogle,
 		currentUserStore
 	} from '$lib/firebase/firebase';
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 
 	import Modal from '$lib/components/Modal.svelte';
 
-	// let currentUserLoading = true;
 	let showSignoutModal = false;
 
 	let showCreateListModal = false;
@@ -26,40 +25,38 @@
 	let deletingListId = '';
 	let deletingListConfirmation = false;
 
+	let currentUserLoading = true;
 	let snapshotLoading = true;
 
 	let lists = [];
+    
 	let unsubFromLists = () => {};
-
-	let unsubFromUser = currentUserStore.subscribe(updateLoginStatus);
+	let unsubFromUser = () => {};
 
 	async function updateLoginStatus(u) {
-		// currentUserLoading = false;
-		if (u == null) {
-			unsubFromLists();
-			lists = [];
-			unsubFromLists = () => {};
-			snapshotLoading = true;
-		} else {
+		if (u) {
 			unsubFromLists = await listenerMainCollection((arr) => {
 				lists = arr;
 				if (snapshotLoading) snapshotLoading = false;
 			});
+		} else {
+			unsubFromLists();
+			lists = [];
+			unsubFromLists = () => {};
+			snapshotLoading = true;
+		}
+		// Better solution??
+		// Stops the sign in from quickly flashing on the screen
+		if (currentUserLoading) {
+			setTimeout(() => {
+				currentUserLoading = false;
+			}, 200);
 		}
 	}
 
-	// onMount(() => {
-	//     if (currentUserStore != null) {
-	//         unsubFromLists = listenerMainCollection((arr) => {
-	//             lists = arr;
-	//             if (snapshotLoading) snapshotLoading = false;
-	//         });
-	//     } else {
-	//         lists = [];
-	//         unsubFromLists = () => {};
-	//         snapshotLoading = true;
-	//     }
-	// });
+	onMount(() => {
+		unsubFromUser = currentUserStore.subscribe(updateLoginStatus);
+	});
 	onDestroy(() => {
 		unsubFromLists();
 		unsubFromUser();
@@ -138,7 +135,10 @@
 <hr />
 
 <main>
-	{#if $currentUserStore === null}
+	{#if currentUserLoading}
+		<h5>Loading</h5>
+		<article class="zeroTopMargin" aria-busy="true" />
+	{:else if $currentUserStore == null}
 		<article class="zeroTopMargin">
 			<h2 style="text-align: center;">Sign in to get started!</h2>
 			<p style="text-align: center;">

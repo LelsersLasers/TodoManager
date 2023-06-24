@@ -99,7 +99,7 @@ export async function getMainCollectionDoc(id) {
 
 export async function createMainCollection(name) {
 	const trimedName = name.trim();
-	if (!trimedName || trimedName.length === 0) {
+	if (!trimedName || trimedName.length == 0) {
 		throw fail(400, { message: 'Name is required' });
 	}
 	const docData = {
@@ -174,7 +174,7 @@ async function getSubCollectionSnapshot(id) {
 
 export async function createSubCollection(id, name) {
 	const trimedName = name.trim();
-	if (!trimedName || trimedName.length === 0) {
+	if (!trimedName || trimedName.length == 0) {
 		throw fail(400, { message: 'Name is required' });
 	}
 
