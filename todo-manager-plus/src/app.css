@@ -1,22 +1,5 @@
-.zeroWidth {
-	width: 0%;
-}
-
-.zeroWidthPadding {
-	padding-left: 0.25em;
-	padding-right: 0.25em;
-}
-
 .nintyWidth {
 	width: 90%;
-}
-
-.floatLeft {
-	float: left;
-}
-
-.floatRight {
-	float: right;
 }
 
 .fifteenWidth {
@@ -27,6 +10,10 @@
 	width: 80%;
 }
 
+.fiveLeftMargin {
+	margin-left: 5%;
+}
+
 .zeroBottomMargin {
 	margin-bottom: 0 !important;
 }
@@ -35,8 +22,29 @@
 	margin-top: 0;
 }
 
+.zeroAutoMargin {
+	margin: 0 auto;
+}
+
 .zeroBottomPadding {
 	padding-bottom: 0;
+}
+
+.zeroWidth {
+	width: 0%;
+}
+
+.zeroWidthPadding {
+	padding-left: 0.25em;
+	padding-right: 0.25em;
+}
+
+.floatLeft {
+	float: left;
+}
+
+.floatRight {
+	float: right;
 }
 
 .stickyFooter {
