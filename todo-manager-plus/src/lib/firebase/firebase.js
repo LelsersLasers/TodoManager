@@ -47,8 +47,6 @@ const provider = new GoogleAuthProvider();
 export const currentUserStore = writable(null);
 onAuthStateChanged(auth, (u) => {
 	currentUserStore.set(u);
-	console.log(u);
-	console.log(currentUserStore);
 });
 
 export async function signInWithGoogle() {
@@ -56,7 +54,6 @@ export async function signInWithGoogle() {
 }
 
 export async function signOutWithGoogle() {
-	// why does this erorr??
 	await signOut(auth);
 }
 

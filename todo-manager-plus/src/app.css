@@ -47,6 +47,12 @@
 	float: right;
 }
 
+img {
+	border-radius: 50%;
+	height: 2em;
+	margin-top: 0.5em;
+}
+
 .stickyFooter {
 	position: fixed;
 	left: 5%;

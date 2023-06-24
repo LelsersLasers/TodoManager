@@ -13,6 +13,8 @@
 
 	import Modal from '$lib/components/Modal.svelte';
 
+	let showSignoutModal = false;
+
 	let showCreateListModal = false;
 
 	let showEditListModal = false;
@@ -74,6 +76,17 @@
 
 <header class="zeroBottomPadding">
 	<hgroup>
+		{#if $currentUserStore != null}
+			<img
+				class="floatRight"
+				src={$currentUserStore.photoURL}
+				alt=""
+				title="Signed in as {$currentUserStore.displayName}. Click to sign out."
+				on:click={() => (showSignoutModal = true)}
+				on:keydown={() => (showSignoutModal = true)}
+				style="cursor: pointer;"
+			/>
+		{/if}
 		<h1>Todo Manager<sup>+</sup></h1>
 		<h2>Managing your todos has never been this easy</h2>
 	</hgroup>
@@ -82,10 +95,22 @@
 <hr />
 
 <main>
-	<button on:click={signInWithGoogle}>Sign in with Google</button>
-	<button on:click={signOutWithGoogle}>Sign out</button>
-	<p>{$currentUserStore}</p>
-	{#if snapshotLoading}
+	{#if $currentUserStore === null}
+		<article class="zeroTopMargin">
+			<h2 style="text-align: center;">Sign in to get started!</h2>
+			<p style="text-align: center;">
+				<kbd
+					on:click={signInWithGoogle}
+					on:keydown={signInWithGoogle}
+					style="cursor: pointer;">Sign in</kbd
+				> with your Google account to start managing your todos!
+			</p>
+		</article>
+
+		<button class="stickyFooter zeroBottomMargin nintyWidth" on:click={signInWithGoogle}
+			>Sign in with Google</button
+		>
+	{:else if snapshotLoading}
 		<h5>Loading</h5>
 		<article class="zeroTopMargin" aria-busy="true" />
 	{:else}
@@ -150,7 +175,9 @@
 		<Modal bind:showModal={showCreateListModal}>
 			<article class="zeroBottomPadding">
 				<form method="POST" on:submit|preventDefault={createList}>
-					<h1 class="zeroBottomMargin"><label for="createList">Create list</label></h1>
+					<h1 class="zeroBottomMargin">
+						<label for="createList">Create list</label>
+					</h1>
 					<input
 						type="text"
 						id="createList"
@@ -186,7 +213,9 @@
 		<Modal bind:showModal={showDeleteListModal}>
 			<article class="zeroBottomPadding">
 				<form method="POST" on:submit|preventDefault={deleteList}>
-					<h1 class="zeroBottomMargin"><label for="deleteList">Delete list</label></h1>
+					<h1 class="zeroBottomMargin">
+						<label for="deleteList">Delete list</label>
+					</h1>
 
 					<label for="deleteList">
 						Are you sure you want to delete this list?
@@ -200,6 +229,20 @@
 					</label>
 
 					<input type="submit" value="Delete" disabled={!deletingListConfirmation} />
+				</form>
+			</article>
+		</Modal>
+
+		<Modal bind:showModal={showSignoutModal}>
+			<article class="zeroBottomPadding">
+				<form method="POST" on:submit|preventDefault={signOutWithGoogle}>
+					<h1 class="zeroBottomMargin">
+						<label for="deleteList">Sign out?</label>
+					</h1>
+					<p>Currently signed in as {$currentUserStore.displayName}</p>
+					<br />
+
+					<input type="submit" value="Sign out" />
 				</form>
 			</article>
 		</Modal>
