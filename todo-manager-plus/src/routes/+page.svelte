@@ -8,11 +8,12 @@
 		signOutWithGoogle,
 		currentUserStore
 	} from '$lib/firebase/firebase';
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
 
 	import Modal from '$lib/components/Modal.svelte';
 
+	// let currentUserLoading = true;
 	let showSignoutModal = false;
 
 	let showCreateListModal = false;
@@ -29,13 +30,40 @@
 
 	let lists = [];
 	let unsubFromLists = () => {};
-	onMount(() => {
-		unsubFromLists = listenerMainCollection((arr) => {
-			lists = arr;
-			if (snapshotLoading) snapshotLoading = false;
-		});
+
+	let unsubFromUser = currentUserStore.subscribe(updateLoginStatus);
+
+	async function updateLoginStatus(u) {
+		// currentUserLoading = false;
+		if (u == null) {
+			unsubFromLists();
+			lists = [];
+			unsubFromLists = () => {};
+			snapshotLoading = true;
+		} else {
+			unsubFromLists = await listenerMainCollection((arr) => {
+				lists = arr;
+				if (snapshotLoading) snapshotLoading = false;
+			});
+		}
+	}
+
+	// onMount(() => {
+	//     if (currentUserStore != null) {
+	//         unsubFromLists = listenerMainCollection((arr) => {
+	//             lists = arr;
+	//             if (snapshotLoading) snapshotLoading = false;
+	//         });
+	//     } else {
+	//         lists = [];
+	//         unsubFromLists = () => {};
+	//         snapshotLoading = true;
+	//     }
+	// });
+	onDestroy(() => {
+		unsubFromLists();
+		unsubFromUser();
 	});
-	onDestroy(unsubFromLists);
 
 	let createListText = '';
 	function createList() {
@@ -69,6 +97,11 @@
 		showDeleteListModal = false;
 	}
 
+	function signIn() {
+		signInWithGoogle();
+		showSignoutModal = false;
+	}
+
 	function redirectToList(id) {
 		goto(`/list/${id}`);
 	}
@@ -86,6 +119,16 @@
 				on:keydown={() => (showSignoutModal = true)}
 				style="cursor: pointer;"
 			/>
+		{:else}
+			<img
+				class="floatRight"
+				src="https://static.thenounproject.com/png/711255-200.png"
+				alt=""
+				title="Not signed in. Click to sign in with Google."
+				on:click={signIn}
+				on:keydown={signIn}
+				style="cursor: pointer;"
+			/>
 		{/if}
 		<h1>Todo Manager<sup>+</sup></h1>
 		<h2>Managing your todos has never been this easy</h2>
@@ -99,15 +142,12 @@
 		<article class="zeroTopMargin">
 			<h2 style="text-align: center;">Sign in to get started!</h2>
 			<p style="text-align: center;">
-				<kbd
-					on:click={signInWithGoogle}
-					on:keydown={signInWithGoogle}
-					style="cursor: pointer;">Sign in</kbd
+				<kbd on:click={signIn} on:keydown={signIn} style="cursor: pointer;">Sign in</kbd
 				> with your Google account to start managing your todos!
 			</p>
 		</article>
 
-		<button class="stickyFooter zeroBottomMargin nintyWidth" on:click={signInWithGoogle}
+		<button class="stickyFooter zeroBottomMargin nintyWidth" on:click={signIn}
 			>Sign in with Google</button
 		>
 	{:else if snapshotLoading}
