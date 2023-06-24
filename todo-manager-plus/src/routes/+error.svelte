@@ -4,7 +4,7 @@
 	import { goto } from '$app/navigation';
 
 	function backToHome(id) {
-		goto('/')
+		goto('/');
 	}
 </script>
 
@@ -21,5 +21,4 @@
 	<button class="nintyWidth zeroAutoMargin" on:click={backToHome}>
 		Return to dashboard
 	</button>
-
 </main>
