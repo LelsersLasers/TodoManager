@@ -24,6 +24,13 @@
 	let showDeleteListModal = false;
 	let deletingListConfirmation = false;
 
+    let showShareListModal = false;
+    let sharingListId = '';
+    let sharingEmail = '';
+
+    let showLeaveListModal = false;
+    let showLeavingListConfirmation = false;
+
 	let currentUserLoading = true;
 	let snapshotLoading = true;
 
@@ -97,6 +104,37 @@
 		showDeleteListModal = false;
 	}
 
+    function startSharingList(id) {
+        sharingListId = id;
+        sharingEmail = '';
+        showShareListModal = true;
+
+        showLeavingListConfirmation = false;
+    }
+    function shareList() {
+        console.warn("SHARE LIST - TODO!");
+
+        sharingListId = '';
+        sharingEmail = '';
+        showShareListModal = false;
+    }
+
+    function startLeavingList() {
+        showLeaveListModal = true;
+    }
+    function leaveList() {
+        console.warn("LEAVE LIST - TODO!");
+
+        sharingListId = '';
+        sharingEmail = '';
+        showShareListModal = false;
+
+        showLeavingListConfirmation = false;
+        showLeaveListModal = false;
+    }
+
+
+
 	function signIn() {
 		signInWithGoogle();
 		showSignoutModal = false;
@@ -165,7 +203,7 @@
 						<th><strong>Name</strong></th>
 						<th class="zeroWidth zeroWidthPadding"><strong>#</strong></th>
 						<th />
-						<!-- <th /> -->
+						<th />
 					</tr>
 				</thead>
 				<tbody>
@@ -184,13 +222,13 @@
 									style="cursor: pointer;">Edit</kbd
 								>
 							</td>
-							<!-- <td class="zeroWidth zeroWidthPadding">
+							<td class="zeroWidth zeroWidthPadding">
 								<kbd
-									on:click|stopPropagation={startDeletingList(list.id)}
-									on:keydown|stopPropagation={startDeletingList(list.id)}
+									on:click|stopPropagation={startSharingList(list.id)}
+									on:keydown|stopPropagation={startSharingList(list.id)}
 									style="cursor: pointer;">Share</kbd
 								>
-							</td> -->
+							</td>
 						</tr>
 					{/each}
 				</tbody>
@@ -279,6 +317,61 @@
 					</label>
 
 					<input type="submit" value="Delete" disabled={!deletingListConfirmation} />
+				</form>
+			</article>
+		</Modal>
+
+        <Modal bind:showModal={showShareListModal}>
+			<article class="zeroBottomPadding">
+				<form method="POST" on:submit|preventDefault={shareList}>
+					<h1 class="zeroBottomMargin"><label for="shareList">Share list</label></h1>
+					<input
+						type="text"
+						id="shareList"
+						name="shareList"
+						placeholder="Email address"
+						required
+						autocomplete="on"
+						bind:value={sharingEmail}
+					/>
+
+					<input class="halfEmBottomMargin" type="submit" value="Share" />
+                    <input
+						class="fiftyWidthWithSpace floatLeft zeroPadding"
+						type="reset"
+						value="Shared with"
+						on:click|preventDefault
+					/>
+                    <input
+						class="fiftyWidthWithSpace floatRight zeroPadding"
+						type="reset"
+						value="Leave"
+						on:click|preventDefault={startLeavingList}
+					/>
+				</form>
+			</article>
+		</Modal>
+
+        <Modal bind:showModal={showLeaveListModal}>
+			<article class="zeroBottomPadding">
+				<form method="POST" on:submit|preventDefault|stopPropagation={leaveList}>
+					<h1 class="zeroBottomMargin">
+						<label for="deleteList">Leave list</label>
+					</h1>
+
+					<label for="deleteList">
+						Are you sure you want to leave this list?
+                        You will no longer be able to access it.
+						<input
+							type="checkbox"
+							role="switch"
+							id="deleteList"
+							name="deleteList"
+							bind:checked={showLeavingListConfirmation}
+						/>
+					</label>
+
+					<input type="submit" value="Leave" disabled={!showLeavingListConfirmation} />
 				</form>
 			</article>
 		</Modal>
