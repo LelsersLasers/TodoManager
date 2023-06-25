@@ -1,16 +1,22 @@
 <script>
 	export let data;
+
 	import {
 		listenerSubCollection,
 		createSubCollection,
 		updateSubCollection,
 		updateSubCollectionFinished,
-		deleteSubCollection
+		deleteSubCollection,
+		signOutWithGoogle,
+		currentUserStore,
+		getMainCollectionDoc
 	} from '$lib/firebase/firebase';
 	import { onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 
 	import Modal from '$lib/components/Modal.svelte';
+
+	let showSignoutModal = false;
 
 	let showCreateTodoModal = false;
 
@@ -26,13 +32,57 @@
 
 	let todos = [];
 	let unsubFromTodos = () => {};
-	onMount(() => {
-		unsubFromTodos = listenerSubCollection(data.id, (arr) => {
+	let unsubFromUser = () => {};
+
+	let loaded = false;
+	async function load() {
+		const listData = await getMainCollectionDoc(data.listId);
+
+		const timestampDate = listData.timestamp.toDate();
+		const createdOn = `${
+			timestampDate.getMonth() + 1
+		}/${timestampDate.getDate()}/${timestampDate.getFullYear()}`;
+
+		data = {
+			...data,
+			count: listData.count,
+			name: listData.name,
+			id: listData.id,
+			createdOn
+		};
+
+		unsubFromTodos = await listenerSubCollection(data.id, (arr) => {
 			todos = arr;
 			if (snapshotLoading) snapshotLoading = false;
 		});
+	}
+
+	let timeoutId;
+	async function updateLoginStatus(u) {
+		if (u) {
+			if (timeoutId) clearTimeout(timeoutId);
+			if (!loaded) {
+				loaded = true;
+				try {
+					await load();
+				} catch (e) {
+					if (e.code === 'permission-denied') {
+						backToHome();
+					}
+				}
+			}
+		} else {
+			timeoutId = setTimeout(backToHome, 1000);
+		}
+	}
+
+	onMount(() => {
+		unsubFromUser = currentUserStore.subscribe(updateLoginStatus);
 	});
-	onDestroy(unsubFromTodos);
+	onDestroy(() => {
+		unsubFromTodos();
+		unsubFromUser();
+	});
 
 	let createTodoText = '';
 	function createTodo() {
@@ -70,6 +120,11 @@
 		showDeleteTodoModal = false;
 	}
 
+	function signOutAndBackToHome() {
+		signOutWithGoogle();
+		backToHome();
+	}
+
 	function backToHome() {
 		goto('/');
 	}
@@ -77,8 +132,30 @@
 
 <header class="zeroBottomPadding">
 	<hgroup>
-		<h1>{data.name}</h1>
-		<h2>Created on {data.createdOn}</h2>
+		{#if $currentUserStore != null}
+			<img
+				class="floatRight"
+				src={$currentUserStore.photoURL}
+				alt=""
+				title="Signed in as {$currentUserStore.displayName}. Click to sign out."
+				on:click={() => (showSignoutModal = true)}
+				on:keydown={() => (showSignoutModal = true)}
+				style="cursor: pointer;"
+			/>
+		{:else}
+			<img
+				class="floatRight"
+				src="https://static.thenounproject.com/png/711255-200.png"
+				alt=""
+			/>
+		{/if}
+		{#if !loaded}
+			<h1>Loading...</h1>
+			<h2>Created on loading...</h2>
+		{:else}
+			<h1>{data.name}</h1>
+			<h2>Created on {data.createdOn}</h2>
+		{/if}
 	</hgroup>
 </header>
 
@@ -101,7 +178,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each todos as todo}
+					{#each todos as todo (todo.id)}
 						<tr>
 							<td>
 								{#if todo.finished}
@@ -219,5 +296,21 @@
 				</form>
 			</article>
 		</Modal>
+
+		{#if $currentUserStore != null}
+			<Modal bind:showModal={showSignoutModal}>
+				<article class="zeroBottomPadding">
+					<form method="POST" on:submit|preventDefault={signOutAndBackToHome}>
+						<h1 class="zeroBottomMargin">
+							<label for="deleteList">Sign out?</label>
+						</h1>
+						<p>Currently signed in as {$currentUserStore.displayName}</p>
+						<br />
+
+						<input type="submit" value="Sign out" />
+					</form>
+				</article>
+			</Modal>
+		{/if}
 	{/if}
 </main>

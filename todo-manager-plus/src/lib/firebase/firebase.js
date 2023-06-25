@@ -1,14 +1,11 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp } from 'firebase/app';
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
 import {
 	getFirestore,
 	collection,
 	getDocs,
 	query,
 	orderBy,
+	where,
 	addDoc,
 	onSnapshot,
 	serverTimestamp,
@@ -19,6 +16,15 @@ import {
 	setDoc,
 	increment
 } from 'firebase/firestore';
+import {
+	getAuth,
+	onAuthStateChanged,
+	signInWithPopup,
+	signOut,
+	GoogleAuthProvider
+} from 'firebase/auth';
+
+import { writable } from 'svelte/store';
 
 import { fail, redirect } from '@sveltejs/kit';
 import { goto } from '$app/navigation';
@@ -34,16 +40,43 @@ const firebaseConfig = {
 	appId: '1:94257088353:web:e172dc575e417731a36720'
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+let user = null;
+export const currentUserStore = writable(user);
+onAuthStateChanged(auth, (u) => {
+	user = u;
+	currentUserStore.set(user);
+});
+
+export async function signInWithGoogle() {
+	await signInWithPopup(auth, provider);
+}
+
+export async function signOutWithGoogle() {
+	await signOut(auth);
+}
+
 const db = getFirestore(app);
 
 const mainCollectionId = 'lists';
 const mainCollection = collection(db, mainCollectionId);
-const mainCollectionQuery = query(mainCollection, orderBy('timestamp', 'desc'));
+const mainCollectionQueryParams = [orderBy('timestamp', 'desc')];
 
 const subCollectionId = 'todos';
 const subCollectionQueryParams = [orderBy('finished'), orderBy('timestamp', 'desc')];
+
+function getMainCollectionQuery() {
+	const mainCollectionQuery = query(
+		mainCollection,
+		...mainCollectionQueryParams,
+		where('uid', '==', user.uid)
+	);
+	return mainCollectionQuery;
+}
 
 // export async function getMainCollection() {
 // 	const snapshot = await getDocs(mainCollectionQuery);
@@ -78,12 +111,16 @@ export async function getMainCollectionDoc(id) {
 
 export async function createMainCollection(name) {
 	const trimedName = name.trim();
-	if (!trimedName || trimedName.length === 0) {
+	if (!trimedName || trimedName.length == 0) {
 		throw fail(400, { message: 'Name is required' });
 	}
+
+	// console.log(user.uid, typeof user.uid);
+
 	const docData = {
 		name: trimedName,
 		count: 0,
+		uid: user.uid,
 		timestamp: serverTimestamp()
 	};
 	addDoc(mainCollection, docData).then((docRef) => goto(`/list/${docRef.id}`));
@@ -110,6 +147,7 @@ export async function updateMainCollection(id, newName) {
 }
 
 export async function listenerMainCollection(postMapCallback) {
+	const mainCollectionQuery = getMainCollectionQuery();
 	const unsubscribe = onSnapshot(mainCollectionQuery, (querySnapshot) => {
 		const arr = querySnapshot.docs.map((d) => {
 			return {
@@ -124,7 +162,11 @@ export async function listenerMainCollection(postMapCallback) {
 
 function getSubCollectionQuery(id) {
 	const subCollection = collection(db, mainCollectionId, id, subCollectionId);
-	const subCollectionQuery = query(subCollection, ...subCollectionQueryParams);
+	const subCollectionQuery = query(
+		subCollection,
+		...subCollectionQueryParams,
+		where('uid', '==', user.uid)
+	);
 	return subCollectionQuery;
 }
 
@@ -153,13 +195,14 @@ async function getSubCollectionSnapshot(id) {
 
 export async function createSubCollection(id, name) {
 	const trimedName = name.trim();
-	if (!trimedName || trimedName.length === 0) {
+	if (!trimedName || trimedName.length == 0) {
 		throw fail(400, { message: 'Name is required' });
 	}
 
 	const docData = {
 		name: trimedName,
 		finished: false,
+		uid: user.uid,
 		timestamp: serverTimestamp()
 	};
 
@@ -224,9 +267,12 @@ lists:
 	- name
 	- timestamp (sorted by this)
 	- count (number of todos)
+    // - users (array of user uids)
+    - uid
 	- todos:
 		- auto id
 		- name
 		- timestamp (sorted by this - 2)
 		- finished (sorted by this - desc - 1)
+        - uid
 `;

@@ -3,12 +3,17 @@
 		listenerMainCollection,
 		createMainCollection,
 		updateMainCollection,
-		deleteMainCollection
+		deleteMainCollection,
+		signInWithGoogle,
+		signOutWithGoogle,
+		currentUserStore
 	} from '$lib/firebase/firebase';
 	import { onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 
 	import Modal from '$lib/components/Modal.svelte';
+
+	let showSignoutModal = false;
 
 	let showCreateListModal = false;
 
@@ -20,17 +25,42 @@
 	let deletingListId = '';
 	let deletingListConfirmation = false;
 
+	let currentUserLoading = true;
 	let snapshotLoading = true;
 
 	let lists = [];
+
 	let unsubFromLists = () => {};
+	let unsubFromUser = () => {};
+
+	async function updateLoginStatus(u) {
+		if (u) {
+			unsubFromLists = await listenerMainCollection((arr) => {
+				lists = arr;
+				if (snapshotLoading) snapshotLoading = false;
+			});
+		} else {
+			unsubFromLists();
+			lists = [];
+			unsubFromLists = () => {};
+			snapshotLoading = true;
+		}
+		// Better solution??
+		// Stops the sign in from quickly flashing on the screen
+		if (currentUserLoading) {
+			setTimeout(() => {
+				currentUserLoading = false;
+			}, 200);
+		}
+	}
+
 	onMount(() => {
-		unsubFromLists = listenerMainCollection((arr) => {
-			lists = arr;
-			if (snapshotLoading) snapshotLoading = false;
-		});
+		unsubFromUser = currentUserStore.subscribe(updateLoginStatus);
 	});
-	onDestroy(unsubFromLists);
+	onDestroy(() => {
+		unsubFromLists();
+		unsubFromUser();
+	});
 
 	let createListText = '';
 	function createList() {
@@ -64,6 +94,11 @@
 		showDeleteListModal = false;
 	}
 
+	function signIn() {
+		signInWithGoogle();
+		showSignoutModal = false;
+	}
+
 	function redirectToList(id) {
 		goto(`/list/${id}`);
 	}
@@ -71,6 +106,27 @@
 
 <header class="zeroBottomPadding">
 	<hgroup>
+		{#if $currentUserStore != null}
+			<img
+				class="floatRight"
+				src={$currentUserStore.photoURL}
+				alt=""
+				title="Signed in as {$currentUserStore.displayName}. Click to sign out."
+				on:click={() => (showSignoutModal = true)}
+				on:keydown={() => (showSignoutModal = true)}
+				style="cursor: pointer;"
+			/>
+		{:else}
+			<img
+				class="floatRight"
+				src="https://static.thenounproject.com/png/711255-200.png"
+				alt=""
+				title="Not signed in. Click to sign in with Google."
+				on:click={signIn}
+				on:keydown={signIn}
+				style="cursor: pointer;"
+			/>
+		{/if}
 		<h1>Todo Manager<sup>+</sup></h1>
 		<h2>Managing your todos has never been this easy</h2>
 	</hgroup>
@@ -79,7 +135,22 @@
 <hr />
 
 <main>
-	{#if snapshotLoading}
+	{#if currentUserLoading}
+		<h5>Loading</h5>
+		<article class="zeroTopMargin" aria-busy="true" />
+	{:else if $currentUserStore == null}
+		<article class="zeroTopMargin">
+			<h2 style="text-align: center;">Sign in to get started!</h2>
+			<p style="text-align: center;">
+				<kbd on:click={signIn} on:keydown={signIn} style="cursor: pointer;">Sign in</kbd
+				> with your Google account to start managing your todos!
+			</p>
+		</article>
+
+		<button class="stickyFooter zeroBottomMargin nintyWidth" on:click={signIn}
+			>Sign in with Google</button
+		>
+	{:else if snapshotLoading}
 		<h5>Loading</h5>
 		<article class="zeroTopMargin" aria-busy="true" />
 	{:else}
@@ -95,7 +166,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each lists as list}
+					{#each lists as list (list.id)}
 						<tr
 							on:click={redirectToList(list.id)}
 							on:keydown={redirectToList(list.id)}
@@ -144,7 +215,9 @@
 		<Modal bind:showModal={showCreateListModal}>
 			<article class="zeroBottomPadding">
 				<form method="POST" on:submit|preventDefault={createList}>
-					<h1 class="zeroBottomMargin"><label for="createList">Create list</label></h1>
+					<h1 class="zeroBottomMargin">
+						<label for="createList">Create list</label>
+					</h1>
 					<input
 						type="text"
 						id="createList"
@@ -180,7 +253,9 @@
 		<Modal bind:showModal={showDeleteListModal}>
 			<article class="zeroBottomPadding">
 				<form method="POST" on:submit|preventDefault={deleteList}>
-					<h1 class="zeroBottomMargin"><label for="deleteList">Delete list</label></h1>
+					<h1 class="zeroBottomMargin">
+						<label for="deleteList">Delete list</label>
+					</h1>
 
 					<label for="deleteList">
 						Are you sure you want to delete this list?
@@ -194,6 +269,20 @@
 					</label>
 
 					<input type="submit" value="Delete" disabled={!deletingListConfirmation} />
+				</form>
+			</article>
+		</Modal>
+
+		<Modal bind:showModal={showSignoutModal}>
+			<article class="zeroBottomPadding">
+				<form method="POST" on:submit|preventDefault={signOutWithGoogle}>
+					<h1 class="zeroBottomMargin">
+						<label for="deleteList">Sign out?</label>
+					</h1>
+					<p>Currently signed in as {$currentUserStore.displayName}</p>
+					<br />
+
+					<input type="submit" value="Sign out" />
 				</form>
 			</article>
 		</Modal>
