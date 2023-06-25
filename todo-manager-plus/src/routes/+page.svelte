@@ -166,7 +166,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each lists as list}
+					{#each lists as list (list.id)}
 						<tr
 							on:click={redirectToList(list.id)}
 							on:keydown={redirectToList(list.id)}

@@ -172,7 +172,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each todos as todo}
+					{#each todos as todo (todo.id)}
 						<tr>
 							<td>
 								{#if todo.finished}
