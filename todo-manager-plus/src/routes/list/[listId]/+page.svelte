@@ -25,6 +25,7 @@
 	let editingTodoName = '';
 
 	let showDeleteTodoModal = false;
+	let deletingTodoId = '';
 	let deletingTodoConfirmation = false;
 
 	let snapshotLoading = true;
@@ -98,8 +99,6 @@
 		editingTodoId = id;
 		editingTodoName = name;
 		showEditTodoModal = true;
-
-		deletingTodoConfirmation = false;
 	}
 	function editList() {
 		updateSubCollection(data.id, editingTodoId, editingTodoName);
@@ -109,16 +108,14 @@
 		showEditTodoModal = false;
 	}
 
-	function startDeletingTodo() {
+	function startDeletingTodo(id) {
+		deletingTodoId = id;
+        deletingTodoConfirmation = false;
 		showDeleteTodoModal = true;
 	}
 	function deleteTodo() {
-		deleteSubCollection(data.id, editingTodoId);
-
-		editingTodoId = '';
-		editingTodoName = '';
-		showEditTodoModal = false;
-
+		deleteSubCollection(data.id, deletingTodoId);
+		deletingTodoId = '';
 		deletingTodoConfirmation = false;
 		showDeleteTodoModal = false;
 	}
@@ -177,7 +174,7 @@
 						<th><strong>Name</strong></th>
 						<th class="zeroWidth zeroWidthPadding"><strong>Done</strong></th>
 						<th />
-						<!-- <th /> -->
+						<th />
 					</tr>
 				</thead>
 				<tbody>
@@ -204,7 +201,13 @@
 									style="cursor: pointer;">Edit</kbd
 								>
 							</td>
-							<!-- TODO: re add delete button -->
+							<td class="zeroWidth zeroWidthPadding">
+								<kbd
+									on:click|stopPropagation={startDeletingTodo(todo.id)}
+									on:keydown|stopPropagation={startDeletingTodo(todo.id)}
+									style="cursor: pointer;">Delete</kbd
+								>
+							</td>
 						</tr>
 					{/each}
 				</tbody>
@@ -269,20 +272,14 @@
 						autocomplete="off"
 						bind:value={editingTodoName}
 					/>
-					<input class="eightyWidth floatLeft" type="submit" value="Update" />
-					<input
-						class="fifteenWidth floatRight zeroPadding"
-						type="reset"
-						value="&#128465;"
-						on:click|preventDefault={startDeletingTodo}
-					/>
+					<input class="floatRight" type="submit" value="Update" />
 				</form>
 			</article>
 		</Modal>
 
 		<Modal bind:showModal={showDeleteTodoModal}>
 			<article class="zeroBottomPadding">
-				<form method="POST" on:submit|preventDefault|stopPropagation={deleteTodo}>
+				<form method="POST" on:submit|preventDefault={deleteTodo}>
 					<h1 class="zeroBottomMargin"><label for="deleteList">Delete todo</label></h1>
 					<label for="deleteList">
 						Are you sure you want to delete this item?
