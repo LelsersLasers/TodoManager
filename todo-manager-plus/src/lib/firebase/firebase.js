@@ -45,9 +45,7 @@ const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
 export const currentUserStore = writable(null);
-onAuthStateChanged(auth, (u) => {
-	currentUserStore.set(u);
-});
+onAuthStateChanged(auth, (u) => currentUserStore.set(u));
 
 export async function signInWithGoogle() {
 	await signInWithPopup(auth, provider);

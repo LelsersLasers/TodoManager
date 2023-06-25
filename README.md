@@ -4,6 +4,12 @@ A simple todo manager with SvelteKit and Firebase hosted on Vercel
 
 ## TODO
 
+- Issue:
+    - `currentUserStore.subscribe(updateLoginStatus)`
+        - Fires with null on page load when:
+            - logged in, on refresh of page
+        - Solved with `setTimeout()`
+
 ### Errors
 
 - `POST https://firestore.googleapis.com/google.firestore.v1.Firestore/Listen/channel?VER=8&database=projects%2Ftodo-manager-lelserslasers%2Fdatabases%2F(default)&gsessionid=Fu-LzcRDu_bzbnREv2rgiDsF44jhC9dzmFRVr9AGYJA&SID=ucy1FKgjqmwuWgCWEPqZbw&RID=86269&TYPE=terminate&zx=3tm8rmoe55he net::ERR_BLOCKED_BY_CLIENT`
