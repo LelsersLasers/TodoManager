@@ -67,6 +67,13 @@ img {
 
 .stickyFooter {
 	position: fixed;
-	left: 5%;
-	bottom: 2.5%;
+	left: 0;
+	bottom: 0;
+	background: var(--background-color);
+	width: 100%;
+
+	padding-bottom: 2.5%;
+	padding-top: 2.5%;
+	padding-left: 5%;
+	padding-right: 5%;
 }

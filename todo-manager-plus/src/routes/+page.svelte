@@ -210,10 +210,11 @@
 			</article>
 		{/if}
 
-		<button
-			class="stickyFooter zeroBottomMargin nintyWidth"
-			on:click={() => (showCreateListModal = true)}>Create new list</button
-		>
+		<div class="stickyFooter zeroBottomMargin nintyWidth">
+			<button class="zeroBottomMargin" on:click={() => (showCreateListModal = true)}>
+				Create new list
+			</button>
+		</div>
 
 		<Modal bind:showModal={showCreateListModal}>
 			<article class="zeroBottomPadding">
