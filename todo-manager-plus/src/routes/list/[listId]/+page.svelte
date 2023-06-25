@@ -177,6 +177,7 @@
 						<th><strong>Name</strong></th>
 						<th class="zeroWidth zeroWidthPadding"><strong>Done</strong></th>
 						<th />
+						<!-- <th /> -->
 					</tr>
 				</thead>
 				<tbody>
@@ -203,6 +204,7 @@
 									style="cursor: pointer;">Edit</kbd
 								>
 							</td>
+							<!-- TODO: re add delete button -->
 						</tr>
 					{/each}
 				</tbody>
@@ -293,7 +295,12 @@
 						/>
 					</label>
 
-					<input class="floatRight" type="submit" value="Delete" disabled={!deletingTodoConfirmation} />
+					<input
+						class="floatRight"
+						type="submit"
+						value="Delete"
+						disabled={!deletingTodoConfirmation}
+					/>
 				</form>
 			</article>
 		</Modal>

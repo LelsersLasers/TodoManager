@@ -73,7 +73,7 @@ function getMainCollectionQuery() {
 	const mainCollectionQuery = query(
 		mainCollection,
 		...mainCollectionQueryParams,
-		where('uid', '==', user.uid)
+		where('uids', 'array-contains', user.email)
 	);
 	return mainCollectionQuery;
 }
@@ -115,18 +115,16 @@ export async function createMainCollection(name) {
 		throw fail(400, { message: 'Name is required' });
 	}
 
-	// console.log(user.uid, typeof user.uid);
-
 	const docData = {
 		name: trimedName,
 		count: 0,
-		uid: user.uid,
+		uids: [user.email],
 		timestamp: serverTimestamp()
 	};
 	addDoc(mainCollection, docData).then((docRef) => goto(`/list/${docRef.id}`));
 }
 
-export async function deleteMainCollection(id) {
+async function deleteMainCollection(id) {
 	const subCollectionSnapshot = await getSubCollectionSnapshot(id);
 	if (!subCollectionSnapshot.empty) {
 		const subCollectionDocs = subCollectionSnapshot.docs;
@@ -144,6 +142,71 @@ export async function updateMainCollection(id, newName) {
 	await updateDoc(docRef, {
 		name: newName
 	});
+}
+
+export async function shareMainCollection(id, email) {
+	const docRef = doc(db, mainCollectionId, id);
+	const docSnap = await getDoc(docRef);
+	if (docSnap.exists()) {
+		const docData = docSnap.data();
+		const oldUids = docData.uids;
+		if (oldUids.includes(email)) {
+			throw fail(400, { message: `Already shared with ${email}` });
+		}
+		const newUids = [...oldUids, email];
+		await updateDoc(docRef, {
+			uids: newUids
+		});
+	}
+
+	// update sub collection docs also
+	const subCollectionSnapshot = await getSubCollectionSnapshot(id);
+	if (!subCollectionSnapshot.empty) {
+		const subCollectionDocs = subCollectionSnapshot.docs;
+		subCollectionDocs.forEach(async (d) => {
+			const subDocRef = doc(db, mainCollectionId, id, subCollectionId, d.id);
+			const subDocSnap = await getDoc(subDocRef);
+			const subDocData = subDocSnap.data();
+			const oldUids = subDocData.uids;
+			const newUids = [...oldUids, email];
+			updateDoc(subDocRef, {
+				uids: newUids
+			});
+		});
+	}
+}
+
+export async function leaveMainCollection(id) {
+	const docRef = doc(db, mainCollectionId, id);
+	const docSnap = await getDoc(docRef);
+	if (docSnap.exists()) {
+		const docData = docSnap.data();
+		const oldUids = docData.uids;
+		const newUids = oldUids.filter((uid) => uid !== user.email);
+		if (newUids.length === 0) {
+			await deleteMainCollection(id);
+			return;
+		}
+		await updateDoc(docRef, {
+			uids: newUids
+		});
+	}
+
+	// update sub collection docs also
+	const subCollectionSnapshot = await getSubCollectionSnapshot(id);
+	if (!subCollectionSnapshot.empty) {
+		const subCollectionDocs = subCollectionSnapshot.docs;
+		subCollectionDocs.forEach(async (d) => {
+			const subDocRef = doc(db, mainCollectionId, id, subCollectionId, d.id);
+			const subDocSnap = await getDoc(subDocRef);
+			const subDocData = subDocSnap.data();
+			const oldUids = subDocData.uids;
+			const newUids = oldUids.filter((uid) => uid !== user.email);
+			updateDoc(subDocRef, {
+				uids: newUids
+			});
+		});
+	}
 }
 
 export async function listenerMainCollection(postMapCallback) {
@@ -165,7 +228,7 @@ function getSubCollectionQuery(id) {
 	const subCollectionQuery = query(
 		subCollection,
 		...subCollectionQueryParams,
-		where('uid', '==', user.uid)
+		where('uids', 'array-contains', user.email)
 	);
 	return subCollectionQuery;
 }
@@ -202,18 +265,25 @@ export async function createSubCollection(id, name) {
 	const docData = {
 		name: trimedName,
 		finished: false,
-		uid: user.uid,
+		// uids: [user.email], // Doesn't work, need to get the doc first
 		timestamp: serverTimestamp()
 	};
+
+	const docRef = doc(db, mainCollectionId, id);
+	const docSnap = await getDoc(docRef);
+	if (!docSnap.exists()) {
+		throw fail(404, { message: 'List not found' });
+	}
+	const mainCollectionData = docSnap.data();
 
 	const subCollectionDoc = doc(collection(db, mainCollectionId, id, subCollectionId));
 	await setDoc(subCollectionDoc, {
 		...docData,
-		id: subCollectionDoc.id
+		id: subCollectionDoc.id,
+		uids: mainCollectionData.uids
 	});
 
 	// update list.count
-	const docRef = doc(db, mainCollectionId, id);
 	await updateDoc(docRef, {
 		count: increment(1)
 	});
@@ -267,12 +337,11 @@ lists:
 	- name
 	- timestamp (sorted by this)
 	- count (number of todos)
-    // - users (array of user uids)
-    - uid
+    - uids (array of emails)
 	- todos:
 		- auto id
 		- name
 		- timestamp (sorted by this - 2)
 		- finished (sorted by this - desc - 1)
-        - uid
+        - uids (array of emails)
 `;

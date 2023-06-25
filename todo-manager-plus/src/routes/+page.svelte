@@ -3,7 +3,8 @@
 		listenerMainCollection,
 		createMainCollection,
 		updateMainCollection,
-		deleteMainCollection,
+		shareMainCollection,
+		leaveMainCollection,
 		signInWithGoogle,
 		signOutWithGoogle,
 		currentUserStore
@@ -21,17 +22,16 @@
 	let editingListId = '';
 	let editingListName = '';
 
-	let showDeleteListModal = false;
-	let deletingListConfirmation = false;
+	let showShareListModal = false;
+	let sharingListId = '';
+	let sharingEmail = '';
+	let shareMessage = '';
 
-    let showShareListModal = false;
-    let sharingListId = '';
-    let sharingEmail = '';
+	let showLeaveListModal = false;
+	let showLeavingListConfirmation = false;
 
-    let showLeaveListModal = false;
-    let showLeavingListConfirmation = false;
-
-    let showWithListModal = false;
+	let showWithListModal = false;
+	let emails = [];
 
 	let currentUserLoading = true;
 	let snapshotLoading = true;
@@ -72,6 +72,9 @@
 
 	let createListText = '';
 	function createList() {
+		createListText = createListText.trim();
+		if (createListText.length === 0) return;
+
 		createMainCollection(createListText);
 		createListText = '';
 		showCreateListModal = false;
@@ -92,50 +95,47 @@
 		showEditListModal = false;
 	}
 
-	function startDeletingList() {
-		showDeleteListModal = true;
+	function startSharingList(id) {
+		sharingListId = id;
+		sharingEmail = '';
+		showShareListModal = true;
+
+		showLeavingListConfirmation = false;
 	}
-	function deleteList() {
-		deleteMainCollection(editingListId);
+	function shareList() {
+		sharingEmail = sharingEmail.trim();
+		if (sharingEmail.length === 0) return;
 
-		editingListId = '';
-		editingListName = '';
-		showEditListModal = false;
+		shareMainCollection(sharingListId, sharingEmail)
+			.then(() => {
+				shareMessage = `Shared list with ${sharingEmail}`;
 
-		deletingListConfirmation = false;
-		showDeleteListModal = false;
+				sharingEmail = '';
+			})
+			.catch((err) => {
+				shareMessage = `${err.data.message}`;
+			});
 	}
 
-    function startSharingList(id) {
-        sharingListId = id;
-        sharingEmail = '';
-        showShareListModal = true;
+	function startLeavingList() {
+		showLeaveListModal = true;
+	}
+	function leaveList() {
+		leaveMainCollection(sharingListId);
 
-        showLeavingListConfirmation = false;
-    }
-    function shareList() {
-        console.warn("SHARE LIST - TODO!");
+		sharingListId = '';
+		sharingEmail = '';
+		showShareListModal = false;
 
-        sharingListId = '';
-        sharingEmail = '';
-        showShareListModal = false;
-    }
+		showLeavingListConfirmation = false;
+		showLeaveListModal = false;
+	}
 
-    function startLeavingList() {
-        showLeaveListModal = true;
-    }
-    function leaveList() {
-        console.warn("LEAVE LIST - TODO!");
+	function startShowingWithList() {
+		emails = lists.find((list) => list.id === sharingListId).uids;
 
-        sharingListId = '';
-        sharingEmail = '';
-        showShareListModal = false;
-
-        showLeavingListConfirmation = false;
-        showLeaveListModal = false;
-    }
-
-
+		showWithListModal = true;
+	}
 
 	function signIn() {
 		signInWithGoogle();
@@ -271,7 +271,7 @@
 						autocomplete="off"
 						bind:value={createListText}
 					/>
-                    <!-- floatRight just makes it float to get the margins/padding correct -->
+					<!-- floatRight just makes it float to get the margins/padding correct -->
 					<input class="floatRight" type="submit" value="Create" />
 				</form>
 			</article>
@@ -290,41 +290,12 @@
 						autocomplete="off"
 						bind:value={editingListName}
 					/>
-					<input class="eightyWidth floatLeft" type="submit" value="Update" />
-					<input
-						class="fifteenWidth floatRight zeroPadding"
-						type="reset"
-						value="&#128465;"
-						on:click|preventDefault={startDeletingList}
-					/>
+					<input class="floatRight" type="submit" value="Update" />
 				</form>
 			</article>
 		</Modal>
 
-		<Modal bind:showModal={showDeleteListModal}>
-			<article class="zeroBottomPadding">
-				<form method="POST" on:submit|preventDefault|stopPropagation={deleteList}>
-					<h1 class="zeroBottomMargin">
-						<label for="deleteList">Delete list</label>
-					</h1>
-
-					<label for="deleteList">
-						Are you sure you want to delete this list?
-						<input
-							type="checkbox"
-							role="switch"
-							id="deleteList"
-							name="deleteList"
-							bind:checked={deletingListConfirmation}
-						/>
-					</label>
-
-					<input class="floatRight" type="submit" value="Delete" disabled={!deletingListConfirmation} />
-				</form>
-			</article>
-		</Modal>
-
-        <Modal bind:showModal={showShareListModal}>
+		<Modal bind:showModal={showShareListModal}>
 			<article class="zeroBottomPadding">
 				<form method="POST" on:submit|preventDefault={shareList}>
 					<h1 class="zeroBottomMargin"><label for="shareList">Share list</label></h1>
@@ -337,15 +308,18 @@
 						autocomplete="on"
 						bind:value={sharingEmail}
 					/>
+					{#if shareMessage != ''}
+						<label class="zeroTopMargin" for="shareList">{shareMessage}</label>
+					{/if}
 
 					<input class="halfEmBottomMargin" type="submit" value="Share" />
-                    <input
+					<input
 						class="fiftyWidthWithSpace floatLeft zeroPadding"
 						type="reset"
 						value="Shared with"
-						on:click|preventDefault={() => showWithListModal = true}
+						on:click|preventDefault={startShowingWithList}
 					/>
-                    <input
+					<input
 						class="fiftyWidthWithSpace floatRight zeroPadding"
 						type="reset"
 						value="Leave"
@@ -355,7 +329,7 @@
 			</article>
 		</Modal>
 
-        <Modal bind:showModal={showLeaveListModal}>
+		<Modal bind:showModal={showLeaveListModal}>
 			<article class="zeroBottomPadding">
 				<form method="POST" on:submit|preventDefault|stopPropagation={leaveList}>
 					<h1 class="zeroBottomMargin">
@@ -363,8 +337,8 @@
 					</h1>
 
 					<label for="leaveList">
-						Are you sure you want to leave this list?
-                        You will no longer be able to access it.
+						Are you sure you want to leave this list? You will no longer be able to
+						access it.
 						<input
 							type="checkbox"
 							role="switch"
@@ -374,31 +348,32 @@
 						/>
 					</label>
 
-					<input class="floatRight" type="submit" value="Leave" disabled={!showLeavingListConfirmation} />
+					<input
+						class="floatRight"
+						type="submit"
+						value="Leave"
+						disabled={!showLeavingListConfirmation}
+					/>
 				</form>
 			</article>
 		</Modal>
 
-        <Modal bind:showModal={showWithListModal}>
+		<Modal bind:showModal={showWithListModal}>
 			<article class="zeroBottomPadding">
-                <h1 class="zeroBottomMargin">Shared with</h1>
+				<h1 class="zeroBottomMargin">Shared with</h1>
 
-                <ul>
-                    <!-- {#each sharedWith as user}
-                        <li>{user}</li>
-                    {/each} -->
-                    <li>TODO!</li>
-                </ul>
-
+				<ul>
+					{#each emails as email (email)}
+						<li>{email}</li>
+					{/each}
+				</ul>
 			</article>
 		</Modal>
 
 		<Modal bind:showModal={showSignoutModal}>
 			<article class="zeroBottomPadding">
 				<form method="POST" on:submit|preventDefault={signOutWithGoogle}>
-					<h1 class="zeroBottomMargin">
-						<label for="deleteList">Sign out?</label>
-					</h1>
+					<h1 class="zeroBottomMargin">Sign out?</h1>
 					<p>Currently signed in as {$currentUserStore.displayName}</p>
 					<br />
 

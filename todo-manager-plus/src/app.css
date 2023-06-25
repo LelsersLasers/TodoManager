@@ -11,7 +11,7 @@
 }
 
 .fiftyWidthWithSpace {
-    width: 48.75% !important;
+	width: 48.75% !important;
 }
 
 .zeroWidth {
@@ -44,7 +44,7 @@
 }
 
 .halfEmBottomMargin {
-    margin-bottom: 0.5em !important;
+	margin-bottom: 0.5em !important;
 }
 
 .zeroPadding {
@@ -70,7 +70,7 @@
 img {
 	border-radius: 50%;
 	height: 2em;
-    /* width: 2em; */
+	/* width: 2em; */
 	margin-top: 0.5em;
 }
 
