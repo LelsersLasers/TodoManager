@@ -63,7 +63,13 @@
 			if (timeoutId) clearTimeout(timeoutId);
 			if (!loaded) {
 				loaded = true;
-				await load();
+				try {
+					await load();
+				} catch (e) {
+					if (e.code === 'permission-denied') {
+						backToHome();
+					}
+				}
 			}
 		} else {
 			timeoutId = setTimeout(backToHome, 1000);
