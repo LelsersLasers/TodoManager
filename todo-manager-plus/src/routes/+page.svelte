@@ -33,7 +33,7 @@
 	let unsubFromUser = () => {};
 
 	async function updateLoginStatus(u) {
-        unsubFromLists();
+		unsubFromLists();
 		if (u) {
 			unsubFromLists = await listenerMainCollection((arr) => {
 				lists = arr;
@@ -72,6 +72,8 @@
 		editingListId = id;
 		editingListName = name;
 		showEditListModal = true;
+
+		deletingListConfirmation = false;
 	}
 	function editList() {
 		updateMainCollection(editingListId, editingListName);
@@ -164,7 +166,6 @@
 						<th class="zeroWidth zeroWidthPadding"><strong>#</strong></th>
 						<th />
 						<!-- <th /> -->
-                        <!-- <th /> -->
 					</tr>
 				</thead>
 				<tbody>
@@ -184,13 +185,6 @@
 								>
 							</td>
 							<!-- <td class="zeroWidth zeroWidthPadding">
-								<kbd
-									on:click|stopPropagation={startDeletingList(list.id)}
-									on:keydown|stopPropagation={startDeletingList(list.id)}
-									style="cursor: pointer;">Delete</kbd
-								>
-							</td> -->
-                            <!-- <td class="zeroWidth zeroWidthPadding">
 								<kbd
 									on:click|stopPropagation={startDeletingList(list.id)}
 									on:keydown|stopPropagation={startDeletingList(list.id)}
@@ -255,14 +249,19 @@
 						bind:value={editingListName}
 					/>
 					<input class="eightyWidth floatLeft" type="submit" value="Update" />
-                    <input class="fifteenWidth floatRight zeroPadding" type="reset" value="&#128465;" on:click|preventDefault={startDeletingList} />
+					<input
+						class="fifteenWidth floatRight zeroPadding"
+						type="reset"
+						value="&#128465;"
+						on:click|preventDefault={startDeletingList}
+					/>
 				</form>
 			</article>
 		</Modal>
 
 		<Modal bind:showModal={showDeleteListModal}>
 			<article class="zeroBottomPadding">
-				<form method="POST" on:submit|preventDefault={deleteList}>
+				<form method="POST" on:submit|preventDefault|stopPropagation={deleteList}>
 					<h1 class="zeroBottomMargin">
 						<label for="deleteList">Delete list</label>
 					</h1>
