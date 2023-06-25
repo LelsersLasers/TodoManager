@@ -25,7 +25,7 @@
 	let showShareListModal = false;
 	let sharingListId = '';
 	let sharingEmail = '';
-	let shareMessage = '';
+	let shareMessage = 'Email address';
 
 	let showLeaveListModal = false;
 	let showLeavingListConfirmation = false;
@@ -97,6 +97,7 @@
 		sharingListId = id;
 		sharingEmail = '';
 		showShareListModal = true;
+        shareMessage = 'Email address';
 
 		showLeavingListConfirmation = false;
 	}
@@ -107,12 +108,13 @@
 		shareMainCollection(sharingListId, sharingEmail)
 			.then(() => {
 				shareMessage = `Shared list with ${sharingEmail}`;
-
-				sharingEmail = '';
 			})
 			.catch((err) => {
 				shareMessage = `${err.data.message}`;
-			});
+			})
+            .finally(() => {
+                sharingEmail = '';
+            });
 	}
 
 	function startLeavingList() {
@@ -301,14 +303,11 @@
 						type="text"
 						id="shareList"
 						name="shareList"
-						placeholder="Email address"
+						placeholder={shareMessage}
 						required
 						autocomplete="on"
 						bind:value={sharingEmail}
 					/>
-					{#if shareMessage != ''}
-						<label class="zeroTopMargin" for="shareList">{shareMessage}</label>
-					{/if}
 
 					<input class="halfEmBottomMargin" type="submit" value="Share" />
 					<input
@@ -357,14 +356,13 @@
 		</Modal>
 
 		<Modal bind:showModal={showWithListModal}>
-			<article class="zeroBottomPadding">
+			<article class="overflowScroll">
 				<h1 class="zeroBottomMargin">Shared with</h1>
 
-				<ul>
-					{#each emails as email (email)}
-						<li>{email}</li>
-					{/each}
-				</ul>
+                {#each emails as email (email)}
+                    <li>{email}</li>
+                {/each}
+
 			</article>
 		</Modal>
 

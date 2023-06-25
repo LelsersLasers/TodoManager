@@ -67,6 +67,12 @@
 	word-break: break-word;
 }
 
+.overflowScroll {
+    overflow-y: scroll;
+    height: 60vh;
+    width: 90vw;
+}
+
 img {
 	border-radius: 50%;
 	height: 2em;
