@@ -180,7 +180,7 @@
 				<tbody>
 					{#each todos as todo (todo.id)}
 						<tr>
-							<td>
+							<td class="breakWord">
 								{#if todo.finished}
 									<del>{todo.name}</del>
 								{:else}

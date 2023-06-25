@@ -22,7 +22,6 @@
 	let editingListName = '';
 
 	let showDeleteListModal = false;
-	let deletingListId = '';
 	let deletingListConfirmation = false;
 
 	let currentUserLoading = true;
@@ -34,13 +33,13 @@
 	let unsubFromUser = () => {};
 
 	async function updateLoginStatus(u) {
+        unsubFromLists();
 		if (u) {
 			unsubFromLists = await listenerMainCollection((arr) => {
 				lists = arr;
 				if (snapshotLoading) snapshotLoading = false;
 			});
 		} else {
-			unsubFromLists();
 			lists = [];
 			unsubFromLists = () => {};
 			snapshotLoading = true;
@@ -82,14 +81,16 @@
 		showEditListModal = false;
 	}
 
-	function startDeletingList(id) {
-		deletingListId = id;
+	function startDeletingList() {
 		showDeleteListModal = true;
 	}
 	function deleteList() {
-		deleteMainCollection(deletingListId);
+		deleteMainCollection(editingListId);
 
-		deletingListId = '';
+		editingListId = '';
+		editingListName = '';
+		showEditListModal = false;
+
 		deletingListConfirmation = false;
 		showDeleteListModal = false;
 	}
@@ -162,7 +163,8 @@
 						<th><strong>Name</strong></th>
 						<th class="zeroWidth zeroWidthPadding"><strong>#</strong></th>
 						<th />
-						<th />
+						<!-- <th /> -->
+                        <!-- <th /> -->
 					</tr>
 				</thead>
 				<tbody>
@@ -172,7 +174,7 @@
 							on:keydown={redirectToList(list.id)}
 							style="cursor: pointer;"
 						>
-							<td>{list.name}</td>
+							<td class="breakWord">{list.name}</td>
 							<td class="zeroWidth zeroWidthPadding">{list.count}</td>
 							<td class="zeroWidth zeroWidthPadding">
 								<kbd
@@ -181,13 +183,20 @@
 									style="cursor: pointer;">Edit</kbd
 								>
 							</td>
-							<td class="zeroWidth zeroWidthPadding">
+							<!-- <td class="zeroWidth zeroWidthPadding">
 								<kbd
 									on:click|stopPropagation={startDeletingList(list.id)}
 									on:keydown|stopPropagation={startDeletingList(list.id)}
 									style="cursor: pointer;">Delete</kbd
 								>
-							</td>
+							</td> -->
+                            <!-- <td class="zeroWidth zeroWidthPadding">
+								<kbd
+									on:click|stopPropagation={startDeletingList(list.id)}
+									on:keydown|stopPropagation={startDeletingList(list.id)}
+									style="cursor: pointer;">Share</kbd
+								>
+							</td> -->
 						</tr>
 					{/each}
 				</tbody>
@@ -245,7 +254,8 @@
 						autocomplete="off"
 						bind:value={editingListName}
 					/>
-					<input type="submit" value="Update" />
+					<input class="eightyWidth floatLeft" type="submit" value="Update" />
+                    <input class="fifteenWidth floatRight zeroPadding" type="reset" value="&#128465;" on:click|preventDefault={startDeletingList} />
 				</form>
 			</article>
 		</Modal>
