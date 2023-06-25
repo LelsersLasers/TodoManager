@@ -31,6 +31,8 @@
     let showLeaveListModal = false;
     let showLeavingListConfirmation = false;
 
+    let showWithListModal = false;
+
 	let currentUserLoading = true;
 	let snapshotLoading = true;
 
@@ -151,7 +153,7 @@
 			<img
 				class="floatRight"
 				src={$currentUserStore.photoURL}
-				alt=""
+				alt="?"
 				title="Signed in as {$currentUserStore.displayName}. Click to sign out."
 				on:click={() => (showSignoutModal = true)}
 				on:keydown={() => (showSignoutModal = true)}
@@ -269,7 +271,8 @@
 						autocomplete="off"
 						bind:value={createListText}
 					/>
-					<input type="submit" value="Create" />
+                    <!-- floatRight just makes it float to get the margins/padding correct -->
+					<input class="floatRight" type="submit" value="Create" />
 				</form>
 			</article>
 		</Modal>
@@ -316,7 +319,7 @@
 						/>
 					</label>
 
-					<input type="submit" value="Delete" disabled={!deletingListConfirmation} />
+					<input class="floatRight" type="submit" value="Delete" disabled={!deletingListConfirmation} />
 				</form>
 			</article>
 		</Modal>
@@ -340,7 +343,7 @@
 						class="fiftyWidthWithSpace floatLeft zeroPadding"
 						type="reset"
 						value="Shared with"
-						on:click|preventDefault
+						on:click|preventDefault={() => showWithListModal = true}
 					/>
                     <input
 						class="fiftyWidthWithSpace floatRight zeroPadding"
@@ -356,23 +359,37 @@
 			<article class="zeroBottomPadding">
 				<form method="POST" on:submit|preventDefault|stopPropagation={leaveList}>
 					<h1 class="zeroBottomMargin">
-						<label for="deleteList">Leave list</label>
+						<label for="leaveList">Leave list</label>
 					</h1>
 
-					<label for="deleteList">
+					<label for="leaveList">
 						Are you sure you want to leave this list?
                         You will no longer be able to access it.
 						<input
 							type="checkbox"
 							role="switch"
-							id="deleteList"
-							name="deleteList"
+							id="leaveList"
+							name="leaveList"
 							bind:checked={showLeavingListConfirmation}
 						/>
 					</label>
 
-					<input type="submit" value="Leave" disabled={!showLeavingListConfirmation} />
+					<input class="floatRight" type="submit" value="Leave" disabled={!showLeavingListConfirmation} />
 				</form>
+			</article>
+		</Modal>
+
+        <Modal bind:showModal={showWithListModal}>
+			<article class="zeroBottomPadding">
+                <h1 class="zeroBottomMargin">Shared with</h1>
+
+                <ul>
+                    <!-- {#each sharedWith as user}
+                        <li>{user}</li>
+                    {/each} -->
+                    <li>TODO!</li>
+                </ul>
+
 			</article>
 		</Modal>
 

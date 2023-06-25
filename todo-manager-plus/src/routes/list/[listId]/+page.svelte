@@ -249,7 +249,7 @@
 						autocomplete="off"
 						bind:value={createTodoText}
 					/>
-					<input type="submit" value="Create" />
+					<input class="floatRight" type="submit" value="Create" />
 				</form>
 			</article>
 		</Modal>
@@ -293,7 +293,7 @@
 						/>
 					</label>
 
-					<input type="submit" value="Delete" disabled={!deletingTodoConfirmation} />
+					<input class="floatRight" type="submit" value="Delete" disabled={!deletingTodoConfirmation} />
 				</form>
 			</article>
 		</Modal>
