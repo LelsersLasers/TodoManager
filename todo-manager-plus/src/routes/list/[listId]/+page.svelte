@@ -110,7 +110,7 @@
 
 	function startDeletingTodo(id) {
 		deletingTodoId = id;
-        deletingTodoConfirmation = false;
+		deletingTodoConfirmation = false;
 		showDeleteTodoModal = true;
 	}
 	function deleteTodo() {
@@ -205,7 +205,7 @@
 								<kbd
 									on:click|stopPropagation={startDeletingTodo(todo.id)}
 									on:keydown|stopPropagation={startDeletingTodo(todo.id)}
-									style="cursor: pointer;">Delete</kbd
+									style="cursor: pointer;">&#128465;</kbd
 								>
 							</td>
 						</tr>

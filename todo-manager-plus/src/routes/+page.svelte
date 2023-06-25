@@ -3,6 +3,7 @@
 		listenerMainCollection,
 		createMainCollection,
 		updateMainCollection,
+		deleteMainCollection,
 		shareMainCollection,
 		leaveMainCollection,
 		signInWithGoogle,
@@ -21,6 +22,9 @@
 	let showEditListModal = false;
 	let editingListId = '';
 	let editingListName = '';
+
+	let showDeleteListModal = false;
+	let deletingListConfirmation = false;
 
 	let showShareListModal = false;
 	let sharingListId = '';
@@ -91,13 +95,29 @@
 		editingListId = '';
 		editingListName = '';
 		showEditListModal = false;
+
+		deletingListConfirmation = false;
+	}
+
+	function startDeletingList() {
+		showDeleteListModal = true;
+	}
+	function deleteList() {
+		deleteMainCollection(editingListId);
+
+		editingListId = '';
+		editingListName = '';
+		showEditListModal = false;
+
+		deletingListConfirmation = false;
+		showDeleteListModal = false;
 	}
 
 	function startSharingList(id) {
 		sharingListId = id;
 		sharingEmail = '';
 		showShareListModal = true;
-        shareMessage = 'Email address';
+		shareMessage = 'Email address';
 
 		showLeavingListConfirmation = false;
 	}
@@ -112,9 +132,9 @@
 			.catch((err) => {
 				shareMessage = `${err.data.message}`;
 			})
-            .finally(() => {
-                sharingEmail = '';
-            });
+			.finally(() => {
+				sharingEmail = '';
+			});
 	}
 
 	function startLeavingList() {
@@ -290,7 +310,40 @@
 						autocomplete="off"
 						bind:value={editingListName}
 					/>
-					<input class="floatRight" type="submit" value="Update" />
+					<input class="eightyWidth floatLeft" type="submit" value="Update" />
+					<input
+						class="fifteenWidth floatRight zeroPadding"
+						type="reset"
+						value="&#128465;"
+						on:click|preventDefault={startDeletingList}
+					/>
+				</form>
+			</article>
+		</Modal>
+
+		<Modal bind:showModal={showDeleteListModal}>
+			<article class="zeroBottomPadding">
+				<form method="POST" on:submit|preventDefault|stopPropagation={deleteList}>
+					<h1 class="zeroBottomMargin">
+						<label for="deleteList">Delete list</label>
+					</h1>
+					<label for="deleteList">
+						Deleting a list will also delete it for all users who have access to it. Are
+						you sure you want to delete this list?
+						<input
+							type="checkbox"
+							role="switch"
+							id="deleteList"
+							name="deleteList"
+							bind:checked={deletingListConfirmation}
+						/>
+					</label>
+					<input
+						class="floatRight"
+						type="submit"
+						value="Delete"
+						disabled={!deletingListConfirmation}
+					/>
 				</form>
 			</article>
 		</Modal>
@@ -334,8 +387,8 @@
 					</h1>
 
 					<label for="leaveList">
-						Are you sure you want to leave this list? You will no longer be able to
-						access it.
+						Leaving a list will mean you will no longer be able to access it. Are you
+						sure you want to leave this list?
 						<input
 							type="checkbox"
 							role="switch"
@@ -359,10 +412,9 @@
 			<article class="overflowScroll">
 				<h1 class="zeroBottomMargin">Shared with</h1>
 
-                {#each emails as email (email)}
-                    <li>{email}</li>
-                {/each}
-
+				{#each emails as email (email)}
+					<li>{email}</li>
+				{/each}
 			</article>
 		</Modal>
 

@@ -105,7 +105,7 @@ export async function getMainCollectionDoc(id) {
 			id: docSnap.id
 		};
 	} else {
-		throw redirect(404, '/');
+		throw redirect(302, '/');
 	}
 }
 
@@ -124,7 +124,7 @@ export async function createMainCollection(name) {
 	addDoc(mainCollection, docData).then((docRef) => goto(`/list/${docRef.id}`));
 }
 
-async function deleteMainCollection(id) {
+export async function deleteMainCollection(id) {
 	const subCollectionSnapshot = await getSubCollectionSnapshot(id);
 	if (!subCollectionSnapshot.empty) {
 		const subCollectionDocs = subCollectionSnapshot.docs;
