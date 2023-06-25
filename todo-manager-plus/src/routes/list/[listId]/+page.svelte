@@ -7,16 +7,16 @@
 		updateSubCollection,
 		updateSubCollectionFinished,
 		deleteSubCollection,
-        signOutWithGoogle,
+		signOutWithGoogle,
 		currentUserStore,
-        getMainCollectionDoc,
+		getMainCollectionDoc
 	} from '$lib/firebase/firebase';
 	import { onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 
 	import Modal from '$lib/components/Modal.svelte';
 
-    let showSignoutModal = false;
+	let showSignoutModal = false;
 
 	let showCreateTodoModal = false;
 
@@ -34,50 +34,49 @@
 	let unsubFromTodos = () => {};
 	let unsubFromUser = () => {};
 
-    let loaded = false;
-    async function load() {
-        const listData = await getMainCollectionDoc(data.listId);
+	let loaded = false;
+	async function load() {
+		const listData = await getMainCollectionDoc(data.listId);
 
-        const timestampDate = listData.timestamp.toDate();
-        const createdOn = `${
-            timestampDate.getMonth() + 1
-        }/${timestampDate.getDate()}/${timestampDate.getFullYear()}`;
+		const timestampDate = listData.timestamp.toDate();
+		const createdOn = `${
+			timestampDate.getMonth() + 1
+		}/${timestampDate.getDate()}/${timestampDate.getFullYear()}`;
 
-        data = {
-            ...data,
-            count: listData.count,
-            name: listData.name,
-            id: listData.id,
-            createdOn,
-        };
+		data = {
+			...data,
+			count: listData.count,
+			name: listData.name,
+			id: listData.id,
+			createdOn
+		};
 
-        
 		unsubFromTodos = await listenerSubCollection(data.id, (arr) => {
 			todos = arr;
 			if (snapshotLoading) snapshotLoading = false;
 		});
-    }
+	}
 
-    let timeoutId;
-    async function updateLoginStatus(u) {
+	let timeoutId;
+	async function updateLoginStatus(u) {
 		if (u) {
-            if (timeoutId) clearTimeout(timeoutId);
-            if (!loaded) {
-                loaded = true;
-                await load();
-            }
+			if (timeoutId) clearTimeout(timeoutId);
+			if (!loaded) {
+				loaded = true;
+				await load();
+			}
 		} else {
-            timeoutId = setTimeout(backToHome, 1000);
-        }
+			timeoutId = setTimeout(backToHome, 1000);
+		}
 	}
 
 	onMount(() => {
 		unsubFromUser = currentUserStore.subscribe(updateLoginStatus);
 	});
 	onDestroy(() => {
-        unsubFromTodos();
-        unsubFromUser();
-    });
+		unsubFromTodos();
+		unsubFromUser();
+	});
 
 	let createTodoText = '';
 	function createTodo() {
@@ -115,10 +114,10 @@
 		showDeleteTodoModal = false;
 	}
 
-    function signOutAndBackToHome() {
-        signOutWithGoogle();
-        backToHome();
-    }
+	function signOutAndBackToHome() {
+		signOutWithGoogle();
+		backToHome();
+	}
 
 	function backToHome() {
 		goto('/');
@@ -127,7 +126,7 @@
 
 <header class="zeroBottomPadding">
 	<hgroup>
-        {#if $currentUserStore != null}
+		{#if $currentUserStore != null}
 			<img
 				class="floatRight"
 				src={$currentUserStore.photoURL}
@@ -144,13 +143,13 @@
 				alt=""
 			/>
 		{/if}
-        {#if !loaded}
-            <h1>Loading...</h1>
-            <h2>Created on loading...</h2>
-        {:else}
-            <h1>{data.name}</h1>
-            <h2>Created on {data.createdOn}</h2>
-        {/if}
+		{#if !loaded}
+			<h1>Loading...</h1>
+			<h2>Created on loading...</h2>
+		{:else}
+			<h1>{data.name}</h1>
+			<h2>Created on {data.createdOn}</h2>
+		{/if}
 	</hgroup>
 </header>
 
@@ -292,20 +291,20 @@
 			</article>
 		</Modal>
 
-        {#if $currentUserStore != null}
-            <Modal bind:showModal={showSignoutModal}>
-                <article class="zeroBottomPadding">
-                    <form method="POST" on:submit|preventDefault={signOutAndBackToHome}>
-                        <h1 class="zeroBottomMargin">
-                            <label for="deleteList">Sign out?</label>
-                        </h1>
-                        <p>Currently signed in as {$currentUserStore.displayName}</p>
-                        <br />
+		{#if $currentUserStore != null}
+			<Modal bind:showModal={showSignoutModal}>
+				<article class="zeroBottomPadding">
+					<form method="POST" on:submit|preventDefault={signOutAndBackToHome}>
+						<h1 class="zeroBottomMargin">
+							<label for="deleteList">Sign out?</label>
+						</h1>
+						<p>Currently signed in as {$currentUserStore.displayName}</p>
+						<br />
 
-                        <input type="submit" value="Sign out" />
-                    </form>
-                </article>
-            </Modal>
-        {/if}
+						<input type="submit" value="Sign out" />
+					</form>
+				</article>
+			</Modal>
+		{/if}
 	{/if}
 </main>

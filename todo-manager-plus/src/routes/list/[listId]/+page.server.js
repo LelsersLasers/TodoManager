@@ -4,6 +4,6 @@ export const load = async ({ params }) => {
 	const { listId } = params;
 
 	return {
-        listId
+		listId
 	};
 };

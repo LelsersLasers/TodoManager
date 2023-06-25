@@ -5,6 +5,7 @@ import {
 	getDocs,
 	query,
 	orderBy,
+	where,
 	addDoc,
 	onSnapshot,
 	serverTimestamp,
@@ -44,8 +45,12 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-export const currentUserStore = writable(null);
-onAuthStateChanged(auth, (u) => currentUserStore.set(u));
+let user = null;
+export const currentUserStore = writable(user);
+onAuthStateChanged(auth, (u) => {
+	user = u;
+	currentUserStore.set(user);
+});
 
 export async function signInWithGoogle() {
 	await signInWithPopup(auth, provider);
@@ -59,10 +64,19 @@ const db = getFirestore(app);
 
 const mainCollectionId = 'lists';
 const mainCollection = collection(db, mainCollectionId);
-const mainCollectionQuery = query(mainCollection, orderBy('timestamp', 'desc'));
+const mainCollectionQueryParams = [orderBy('timestamp', 'desc')];
 
 const subCollectionId = 'todos';
 const subCollectionQueryParams = [orderBy('finished'), orderBy('timestamp', 'desc')];
+
+function getMainCollectionQuery() {
+	const mainCollectionQuery = query(
+		mainCollection,
+		...mainCollectionQueryParams,
+		where('uid', '==', user.uid)
+	);
+	return mainCollectionQuery;
+}
 
 // export async function getMainCollection() {
 // 	const snapshot = await getDocs(mainCollectionQuery);
@@ -100,9 +114,13 @@ export async function createMainCollection(name) {
 	if (!trimedName || trimedName.length == 0) {
 		throw fail(400, { message: 'Name is required' });
 	}
+
+	// console.log(user.uid, typeof user.uid);
+
 	const docData = {
 		name: trimedName,
 		count: 0,
+		uid: user.uid,
 		timestamp: serverTimestamp()
 	};
 	addDoc(mainCollection, docData).then((docRef) => goto(`/list/${docRef.id}`));
@@ -129,6 +147,7 @@ export async function updateMainCollection(id, newName) {
 }
 
 export async function listenerMainCollection(postMapCallback) {
+	const mainCollectionQuery = getMainCollectionQuery();
 	const unsubscribe = onSnapshot(mainCollectionQuery, (querySnapshot) => {
 		const arr = querySnapshot.docs.map((d) => {
 			return {
@@ -143,7 +162,11 @@ export async function listenerMainCollection(postMapCallback) {
 
 function getSubCollectionQuery(id) {
 	const subCollection = collection(db, mainCollectionId, id, subCollectionId);
-	const subCollectionQuery = query(subCollection, ...subCollectionQueryParams);
+	const subCollectionQuery = query(
+		subCollection,
+		...subCollectionQueryParams,
+		where('uid', '==', user.uid)
+	);
 	return subCollectionQuery;
 }
 
@@ -179,6 +202,7 @@ export async function createSubCollection(id, name) {
 	const docData = {
 		name: trimedName,
 		finished: false,
+		uid: user.uid,
 		timestamp: serverTimestamp()
 	};
 
@@ -243,10 +267,12 @@ lists:
 	- name
 	- timestamp (sorted by this)
 	- count (number of todos)
-    - users (array of user uids)
+    // - users (array of user uids)
+    - uid
 	- todos:
 		- auto id
 		- name
 		- timestamp (sorted by this - 2)
 		- finished (sorted by this - desc - 1)
+        - uid
 `;

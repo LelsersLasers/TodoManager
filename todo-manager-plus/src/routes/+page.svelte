@@ -29,7 +29,7 @@
 	let snapshotLoading = true;
 
 	let lists = [];
-    
+
 	let unsubFromLists = () => {};
 	let unsubFromUser = () => {};
 
