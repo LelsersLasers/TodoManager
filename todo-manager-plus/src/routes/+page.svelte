@@ -156,7 +156,7 @@
 	{:else}
 		{#if lists.length > 0}
 			<h4 class="zeroBottomMargin">Todo lists:</h4>
-			<table>
+			<table class="threeEmBottomMargin">
 				<thead>
 					<tr>
 						<th><strong>Name</strong></th>

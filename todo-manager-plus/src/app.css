@@ -39,6 +39,10 @@
 	padding-right: 0.25em;
 }
 
+.threeEmBottomMargin {
+    margin-bottom: 3em;
+}
+
 .floatLeft {
 	float: left;
 }

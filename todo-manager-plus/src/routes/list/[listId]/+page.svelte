@@ -168,7 +168,7 @@
 	{:else}
 		{#if todos.length > 0}
 			<h4 class="zeroBottomMargin">Todos:</h4>
-			<table>
+			<table class="threeEmBottomMargin">
 				<thead>
 					<tr>
 						<th><strong>Name</strong></th>
