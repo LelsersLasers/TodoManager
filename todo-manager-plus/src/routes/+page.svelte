@@ -84,8 +84,6 @@
 		editingListId = id;
 		editingListName = name;
 		showEditListModal = true;
-
-		deletingListConfirmation = false;
 	}
 	function editList() {
 		updateMainCollection(editingListId, editingListName);
