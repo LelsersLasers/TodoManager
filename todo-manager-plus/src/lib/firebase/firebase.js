@@ -64,10 +64,14 @@ const db = getFirestore(app);
 
 const mainCollectionId = 'lists';
 const mainCollection = collection(db, mainCollectionId);
-const mainCollectionQueryParams = [orderBy('timestamp', 'desc')];
+const mainCollectionQueryParams = [orderBy('order'), orderBy('timestamp', 'desc')];
 
 const subCollectionId = 'todos';
-const subCollectionQueryParams = [orderBy('finished'), orderBy('timestamp', 'desc')];
+const subCollectionQueryParams = [
+	orderBy('finished'),
+	orderBy('order'),
+	orderBy('timestamp', 'desc')
+];
 
 function getMainCollectionQuery() {
 	const mainCollectionQuery = query(
@@ -87,6 +91,7 @@ export async function createMainCollection(name) {
 	const docData = {
 		name: trimedName,
 		count: 0,
+		order: 0,
 		uids: [user.email],
 		timestamp: serverTimestamp()
 	};
@@ -107,9 +112,21 @@ export async function deleteMainCollection(id) {
 }
 
 export async function updateMainCollection(id, newName) {
+	const trimedName = newName.trim();
+	if (!trimedName || trimedName.length == 0) {
+		throw fail(400, { message: 'Name is required' });
+	}
+
 	const docRef = doc(db, mainCollectionId, id);
 	await updateDoc(docRef, {
-		name: newName
+		name: trimedName
+	});
+}
+
+export async function updateMainCollectionOrder(id, newOrder) {
+	const docRef = doc(db, mainCollectionId, id);
+	await updateDoc(docRef, {
+		order: newOrder
 	});
 }
 
@@ -280,6 +297,7 @@ export async function createSubCollection(id, name) {
 		name: trimedName,
 		finished: false,
 		// uids: [user.email], // Doesn't work, need to get the doc first
+		order: 0,
 		timestamp: serverTimestamp()
 	};
 
@@ -315,9 +333,14 @@ export async function deleteSubCollection(id, subId) {
 }
 
 export async function updateSubCollection(id, subId, newName) {
+	const trimedName = newName.trim();
+	if (!trimedName || trimedName.length == 0) {
+		throw fail(400, { message: 'Name is required' });
+	}
+
 	const docRef = doc(db, mainCollectionId, id, subCollectionId, subId);
 	await updateDoc(docRef, {
-		name: newName
+		name: trimedName
 	});
 }
 
@@ -326,6 +349,13 @@ export async function updateSubCollectionFinished(id, subId, newFinished) {
 	await updateDoc(docRef, {
 		finished: newFinished,
 		timestamp: serverTimestamp()
+	});
+}
+
+export async function updateSubCollectionOrder(id, subId, newOrder) {
+	const docRef = doc(db, mainCollectionId, id, subCollectionId, subId);
+	await updateDoc(docRef, {
+		order: newOrder
 	});
 }
 

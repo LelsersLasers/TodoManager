@@ -3,6 +3,7 @@
 		listenerMainCollection,
 		createMainCollection,
 		updateMainCollection,
+		updateMainCollectionOrder,
 		deleteMainCollection,
 		shareMainCollection,
 		leaveMainCollection,
@@ -46,6 +47,8 @@
 
 	let currentUserLoading = true;
 	let snapshotLoading = true;
+
+	let editingOrder = false;
 
 	let lists = [];
 
@@ -194,6 +197,77 @@
 		showWithListModal = true;
 	}
 
+	function noNegativeListOrders(idsToUpdate) {
+		let listOrders = lists.map((l) => l.order);
+		let minListOrder = Math.min(...listOrders);
+		if (minListOrder < 0) {
+			let offset = Math.abs(minListOrder);
+			lists.forEach((l) => {
+				l.order += offset;
+			});
+			idsToUpdate = lists.map((l) => l.id);
+		}
+		return idsToUpdate;
+	}
+
+	function moveListUp(id) {
+		// the following is guaranteed to be true
+		// {#if (lists[index - 1])}
+		
+        let idsToUpdate = [];
+
+		let list = lists.find((l) => l.id == id);
+		let index = lists.indexOf(list);
+
+		let aboveList = lists[index - 1];
+		list.order = aboveList.order - 1;
+		index--;
+
+		idsToUpdate.push(list.id);
+
+		while (lists[index - 1]) {
+			lists[index - 1].order = lists[index].order - 2;
+			index--;
+			idsToUpdate.push(lists[index].id);
+		}
+
+		idsToUpdate = noNegativeListOrders(idsToUpdate);
+
+		idsToUpdate.forEach((id) => {
+			const listToUpdate = lists.find((l) => l.id == id);
+			updateMainCollectionOrder(id, listToUpdate.order);
+		});
+	}
+
+	function moveListDown(id) {
+		// the following is guaranteed to be true
+		// {#if (lists[index + 1])}
+
+		let idsToUpdate = [];
+
+		let list = lists.find((l) => l.id == id);
+		let index = lists.indexOf(list);
+
+		let belowList = lists[index + 1];
+		list.order = belowList.order + 1;
+		index++;
+
+		idsToUpdate.push(list.id);
+
+		while (lists[index + 1]) {
+			lists[index + 1].order = lists[index].order + 2;
+			index++;
+			idsToUpdate.push(lists[index].id);
+		}
+
+		idsToUpdate = noNegativeListOrders(idsToUpdate);
+
+		idsToUpdate.forEach((id) => {
+			const listToUpdate = lists.find((l) => l.id == id);
+			updateMainCollectionOrder(id, listToUpdate.order);
+		});
+	}
+
 	function signIn() {
 		signInWithGoogle();
 		showSignoutModal = false;
@@ -260,10 +334,28 @@
 		<article class="zeroTopMargin" aria-busy="true" />
 	{:else}
 		{#if lists.length > 0}
+			{#if !editingOrder}
+				<kbd
+					on:click={() => (editingOrder = true)}
+					on:keydown={() => (editingOrder = true)}
+					class="floatRight clearBoth stickyOnScroll"
+					style="cursor: pointer;">Edit Order</kbd
+				>
+			{:else}
+				<kbd
+					on:click={() => (editingOrder = false)}
+					on:keydown={() => (editingOrder = false)}
+					class="floatRight clearBoth stickyOnScroll"
+					style="cursor: pointer;">Save Order</kbd
+				>
+			{/if}
 			<h4 class="zeroBottomMargin">Todo lists:</h4>
 			<table class="threeEmBottomMargin">
 				<thead>
 					<tr>
+						{#if editingOrder}
+							<th class="zeroWidth zeroWidthPadding"><strong>Order</strong></th>
+						{/if}
 						<th><strong>Name</strong></th>
 						<th class="zeroWidth zeroWidthPadding"><strong>#</strong></th>
 						<th />
@@ -271,12 +363,32 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each lists as list (list.id)}
+					{#each lists as list, index (list.id)}
 						<tr
 							on:click={redirectToList(list.id)}
 							on:keydown={redirectToList(list.id)}
 							style="cursor: pointer;"
 						>
+							{#if editingOrder}
+								<td class="zeroWidth zeroWidthPadding">
+									{#if lists[index - 1]}
+										<button
+											on:click|stopPropagation={moveListUp(list.id)}
+											class="tiny tinyMargin"
+										>
+											&uarr;
+										</button>
+									{/if}
+									{#if lists[index + 1]}
+										<button
+											on:click|stopPropagation={moveListDown(list.id)}
+											class="tiny"
+										>
+											&darr;
+										</button>
+									{/if}
+								</td>
+							{/if}
 							<td class="breakWord">{list.name}</td>
 							<td class="zeroWidth zeroWidthPadding">{list.count}</td>
 							<td class="zeroWidth zeroWidthPadding">
