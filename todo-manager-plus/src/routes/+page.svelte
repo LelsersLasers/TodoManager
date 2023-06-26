@@ -6,6 +6,7 @@
 		deleteMainCollection,
 		shareMainCollection,
 		leaveMainCollection,
+		removeShareMainCollection,
 		signInWithGoogle,
 		signOutWithGoogle,
 		currentUserStore
@@ -14,6 +15,8 @@
 	import { goto } from '$app/navigation';
 
 	import Modal from '$lib/components/Modal.svelte';
+
+	let userEmail = '';
 
 	let showSignoutModal = false;
 
@@ -34,6 +37,10 @@
 	let showLeaveListModal = false;
 	let showLeavingListConfirmation = false;
 
+	let showRemoveListModal = false;
+	let removingEmail = '';
+	let showRemovingListConfirmation = false;
+
 	let showWithListModal = false;
 	let emails = [];
 
@@ -48,6 +55,7 @@
 	async function updateLoginStatus(u) {
 		unsubFromLists();
 		if (u) {
+			userEmail = u.email;
 			unsubFromLists = await listenerMainCollection((arr) => {
 				lists = arr;
 				if (snapshotLoading) snapshotLoading = false;
@@ -88,6 +96,8 @@
 		editingListId = id;
 		editingListName = name;
 		showEditListModal = true;
+
+		deletingListConfirmation = false;
 	}
 	function editList() {
 		updateMainCollection(editingListId, editingListName);
@@ -100,6 +110,7 @@
 	}
 
 	function startDeletingList() {
+		deletingListConfirmation = false;
 		showDeleteListModal = true;
 	}
 	function deleteList() {
@@ -149,11 +160,37 @@
 
 		showLeavingListConfirmation = false;
 		showLeaveListModal = false;
+		showWithListModal = false;
+	}
+
+	function startRemovingList(email) {
+		removingEmail = email;
+		showRemoveListModal = true;
+	}
+	async function removeList() {
+		await removeShareMainCollection(sharingListId, removingEmail);
+
+		removingEmail = '';
+		updateEmails();
+
+		showRemoveListModal = false;
+	}
+
+	function updateEmails() {
+		emails = lists.find((list) => list.id === sharingListId).uids;
+
+		// sort userEmail to the top
+		const index = emails.indexOf(userEmail);
+		if (index > -1) {
+			emails.splice(index, 1);
+			emails.unshift(userEmail);
+		}
 	}
 
 	function startShowingWithList() {
-		emails = lists.find((list) => list.id === sharingListId).uids;
+		updateEmails();
 
+		showRemovingListConfirmation = false;
 		showWithListModal = true;
 	}
 
@@ -210,9 +247,14 @@
 			</p>
 		</article>
 
-		<button class="stickyFooter zeroBottomMargin nintyWidth" on:click={signIn}
-			>Sign in with Google</button
-		>
+		<div class="stickyFooter zeroBottomMargin textAlignCenter">
+			<button
+				class="footerWidth zeroBottomMargin marginZeroAuto nintyFiveWidth"
+				on:click={signIn}
+			>
+				Sign in with Google
+			</button>
+		</div>
 	{:else if snapshotLoading}
 		<h5>Loading</h5>
 		<article class="zeroTopMargin" aria-busy="true" />
@@ -270,14 +312,17 @@
 			</article>
 		{/if}
 
-		<div class="stickyFooter zeroBottomMargin nintyWidth">
-			<button class="zeroBottomMargin" on:click={() => (showCreateListModal = true)}>
+		<div class="stickyFooter zeroBottomMargin textAlignCenter">
+			<button
+				class="footerWidth zeroBottomMargin marginZeroAuto nintyFiveWidth"
+				on:click={() => (showCreateListModal = true)}
+			>
 				Create new list
 			</button>
 		</div>
 
 		<Modal bind:showModal={showCreateListModal}>
-			<article class="zeroBottomPadding">
+			<article class="zeroBottomPadding smallArticleTopPadding">
 				<form method="POST" on:submit|preventDefault={createList}>
 					<h1 class="zeroBottomMargin">
 						<label for="createList">Create list</label>
@@ -289,6 +334,7 @@
 						placeholder="List name"
 						required
 						autocomplete="off"
+						spellcheck="true"
 						bind:value={createListText}
 					/>
 					<!-- floatRight just makes it float to get the margins/padding correct -->
@@ -298,7 +344,7 @@
 		</Modal>
 
 		<Modal bind:showModal={showEditListModal}>
-			<article class="zeroBottomPadding">
+			<article class="zeroBottomPadding smallArticleTopPadding">
 				<form method="POST" on:submit|preventDefault={editList}>
 					<h1 class="zeroBottomMargin"><label for="editList">Update list</label></h1>
 					<input
@@ -308,6 +354,7 @@
 						placeholder="List name"
 						required
 						autocomplete="off"
+						spellcheck="true"
 						bind:value={editingListName}
 					/>
 					<input class="eightyWidth floatLeft" type="submit" value="Update" />
@@ -322,7 +369,7 @@
 		</Modal>
 
 		<Modal bind:showModal={showDeleteListModal}>
-			<article class="zeroBottomPadding">
+			<article class="zeroBottomPadding smallArticleTopPadding">
 				<form method="POST" on:submit|preventDefault|stopPropagation={deleteList}>
 					<h1 class="zeroBottomMargin">
 						<label for="deleteList">Delete list</label>
@@ -349,7 +396,7 @@
 		</Modal>
 
 		<Modal bind:showModal={showShareListModal}>
-			<article class="zeroBottomPadding">
+			<article class="zeroBottomPadding smallArticleTopPadding">
 				<form method="POST" on:submit|preventDefault={shareList}>
 					<h1 class="zeroBottomMargin"><label for="shareList">Share list</label></h1>
 					<input
@@ -380,7 +427,7 @@
 		</Modal>
 
 		<Modal bind:showModal={showLeaveListModal}>
-			<article class="zeroBottomPadding">
+			<article class="zeroBottomPadding smallArticleTopPadding">
 				<form method="POST" on:submit|preventDefault|stopPropagation={leaveList}>
 					<h1 class="zeroBottomMargin">
 						<label for="leaveList">Leave list</label>
@@ -408,13 +455,71 @@
 			</article>
 		</Modal>
 
+		<Modal bind:showModal={showRemoveListModal}>
+			<article class="zeroBottomPadding smallArticleTopPadding">
+				<form method="POST" on:submit|preventDefault|stopPropagation={removeList}>
+					<h1 class="zeroBottomMargin">
+						<label for="removeList">Remove user</label>
+					</h1>
+
+					<label for="removeList">
+						Removing someone from a list will mean they will no longer be able to access
+						it. Are you sure you want to remove this user from the list?
+						<input
+							type="checkbox"
+							role="switch"
+							id="removeList"
+							name="removeList"
+							bind:checked={showRemovingListConfirmation}
+						/>
+					</label>
+
+					<input
+						class="floatRight"
+						type="submit"
+						value="Remove"
+						disabled={!showRemovingListConfirmation}
+					/>
+				</form>
+			</article>
+		</Modal>
+
 		<Modal bind:showModal={showWithListModal}>
 			<article class="overflowScroll">
 				<h1 class="zeroBottomMargin">Shared with</h1>
 
-				{#each emails as email (email)}
-					<li>{email}</li>
-				{/each}
+				<table>
+					<thead>
+						<tr>
+							<th><strong>Email</strong></th>
+							<th />
+						</tr>
+					</thead>
+					<tbody>
+						{#each emails as email (email)}
+							<tr>
+								<td class="modifiedTd breakWord">{email}</td>
+								<td class="modifiedTd zeroWidth zeroWidthPadding">
+									{#if email == userEmail}
+										<kbd
+											class="floatRight"
+											on:click|stopPropagation={startLeavingList}
+											on:keydown|stopPropagation={startLeavingList}
+											style="cursor: pointer;">Leave</kbd
+										>
+									{:else}
+										<kbd
+											class="floatRight"
+											on:click|stopPropagation={startRemovingList(email)}
+											on:keydown|stopPropagation={startRemovingList(email)}
+											style="cursor: pointer;">Remove</kbd
+										>
+									{/if}
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
 			</article>
 		</Modal>
 

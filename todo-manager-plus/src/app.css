@@ -2,6 +2,10 @@
 	width: 90%;
 }
 
+.nintyFiveWidth {
+	width: 95%;
+}
+
 .fifteenWidth {
 	width: 15% !important;
 }
@@ -78,6 +82,19 @@
 	width: 90vw;
 }
 
+.modifiedTd {
+	padding: calc(var(--spacing) / 8) var(--spacing);
+}
+
+input[type='checkbox'] {
+	width: 1.5em;
+	height: 1.5em;
+}
+
+.smallArticleTopPadding {
+	padding-top: 2rem;
+}
+
 img {
 	border-radius: 50%;
 	height: 2em;
@@ -94,6 +111,35 @@ img {
 
 	padding-bottom: 2.5%;
 	padding-top: 1%;
-	padding-left: 5%;
-	padding-right: 5%;
+	/* padding-left: 5%;
+	padding-right: 5%; */
+}
+
+.textAlignCenter {
+	text-align: center;
+}
+
+.marginZeroAuto {
+	margin: 0 auto;
+}
+
+@media (min-width: 576px) {
+	.footerWidth {
+		max-width: 510px;
+	}
+}
+@media (min-width: 768px) {
+	.footerWidth {
+		max-width: 700px;
+	}
+}
+@media (min-width: 992px) {
+	.footerWidth {
+		max-width: 920px;
+	}
+}
+@media (min-width: 1200px) {
+	.footerWidth {
+		max-width: 1130px;
+	}
 }
