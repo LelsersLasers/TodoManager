@@ -26,7 +26,7 @@ import {
 
 import { writable } from 'svelte/store';
 
-import { fail, redirect } from '@sveltejs/kit';
+import { fail } from '@sveltejs/kit';
 import { goto } from '$app/navigation';
 
 // Your web app's Firebase configuration
@@ -78,36 +78,6 @@ function getMainCollectionQuery() {
 	return mainCollectionQuery;
 }
 
-// export async function getMainCollection() {
-// 	const snapshot = await getDocs(mainCollectionQuery);
-
-// 	if (!snapshot.empty) {
-// 		const docs = snapshot.docs;
-// 		const docData = docs.map((d) => {
-// 			return {
-// 				...d.data(),
-// 				id: d.id
-// 			};
-// 		});
-// 		return docData;
-// 	} else {
-// 		return [];
-// 	}
-// }
-
-export async function getMainCollectionDoc(id) {
-	const docRef = doc(db, mainCollectionId, id);
-	const docSnap = await getDoc(docRef);
-
-	if (docSnap.exists()) {
-		return {
-			...docSnap.data(),
-			id: docSnap.id
-		};
-	} else {
-		throw redirect(302, '/');
-	}
-}
 
 export async function createMainCollection(name) {
 	const trimedName = name.trim();
@@ -223,22 +193,21 @@ export async function listenerMainCollection(postMapCallback) {
 	return unsubscribe;
 }
 
-export async function listenerMainCollectionDoc(id, postMapCallback) {
-    const docRef = doc(db, mainCollectionId, id);
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
-        if (docSnap.exists()) {
-            const docData = {
-                ...docSnap.data(),
-                id: docSnap.id
-            };
-            postMapCallback(docData);
-        } else {
-            throw redirect(302, '/');
-        }
-    });
-    return unsubscribe;
+export async function listenerMainCollectionDoc(id, postMapCallback, redirectCallback) {
+	const docRef = doc(db, mainCollectionId, id);
+	const unsubscribe = onSnapshot(docRef, (docSnap) => {
+		if (docSnap.exists()) {
+			const docData = {
+				...docSnap.data(),
+				id: docSnap.id
+			};
+			postMapCallback(docData);
+		} else {
+			redirectCallback();
+		}
+	});
+	return unsubscribe;
 }
-
 
 function getSubCollectionQuery(id) {
 	const subCollection = collection(db, mainCollectionId, id, subCollectionId);
@@ -255,23 +224,6 @@ async function getSubCollectionSnapshot(id) {
 	const snapshot = await getDocs(subCollectionQuery);
 	return snapshot;
 }
-
-// export async function getSubCollection(id) {
-// 	const snapshot = await getSubCollectionSnapshot(id);
-
-// 	if (!snapshot.empty) {
-// 		const docs = snapshot.docs;
-// 		const docData = docs.map((d) => {
-// 			return {
-// 				...d.data(),
-// 				id: d.id
-// 			};
-// 		});
-// 		return docData;
-// 	} else {
-// 		return [];
-// 	}
-// }
 
 export async function createSubCollection(id, name) {
 	const trimedName = name.trim();

@@ -9,9 +9,9 @@
 		deleteSubCollection,
 		signOutWithGoogle,
 		currentUserStore,
-		getMainCollectionDoc,
-        shareMainCollection,
-        leaveMainCollection,
+		listenerMainCollectionDoc,
+		shareMainCollection,
+		leaveMainCollection
 	} from '$lib/firebase/firebase';
 	import { onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -29,56 +29,55 @@
 	let showDeleteTodoModal = false;
 	let deletingTodoId = '';
 	let deletingTodoConfirmation = false;
-    
+
 	let showShareListModal = false;
 	let sharingListId = '';
 	let sharingEmail = '';
 	let shareMessage = 'Email address';
 
-    let showLeaveListModal = false;
+	let showLeaveListModal = false;
 	let showLeavingListConfirmation = false;
 
 	let showWithListModal = false;
-	let emails = [];
 
 	let snapshotLoading = true;
 
 	let todos = [];
 	let unsubFromTodos = () => {};
+	let unsubFromDoc = () => {};
 	let unsubFromUser = () => {};
 
 	let loaded = false;
-	async function load() {
-		const listData = await getMainCollectionDoc(data.listId);
-
-		const timestampDate = listData.timestamp.toDate();
-		const createdOn = `${
-			timestampDate.getMonth() + 1
-		}/${timestampDate.getDate()}/${timestampDate.getFullYear()}`;
-
-		data = {
-			...data,
-			count: listData.count,
-			name: listData.name,
-			id: listData.id,
-            uids: listData.uids,
-			createdOn
-		};
-
-		unsubFromTodos = await listenerSubCollection(data.id, (arr) => {
-			todos = arr;
-			if (snapshotLoading) snapshotLoading = false;
-		});
-	}
-
 	let timeoutId;
 	async function updateLoginStatus(u) {
 		if (u) {
 			if (timeoutId) clearTimeout(timeoutId);
 			if (!loaded) {
-				loaded = true;
 				try {
-					await load();
+					unsubFromDoc = await listenerMainCollectionDoc(
+						data.listId,
+						async (docData) => {
+							const timestampDate = docData.timestamp.toDate();
+							const createdOn = `${
+								timestampDate.getMonth() + 1
+							}/${timestampDate.getDate()}/${timestampDate.getFullYear()}`;
+
+							data.count = docData.count;
+							data.name = docData.name;
+							data.id = docData.id;
+							data.uids = docData.uids;
+							data.createdOn = createdOn;
+
+							if (!loaded) {
+								unsubFromTodos = await listenerSubCollection(data.id, (arr) => {
+									todos = arr;
+									if (snapshotLoading) snapshotLoading = false;
+								});
+								loaded = true;
+							}
+						},
+						backToHome
+					);
 				} catch (e) {
 					if (e.code === 'permission-denied') {
 						backToHome();
@@ -95,6 +94,7 @@
 	});
 	onDestroy(() => {
 		unsubFromTodos();
+		unsubFromDoc();
 		unsubFromUser();
 	});
 
@@ -134,7 +134,7 @@
 		showDeleteTodoModal = false;
 	}
 
-    function startSharingList(id) {
+	function startSharingList(id) {
 		sharingListId = id;
 		sharingEmail = '';
 		showShareListModal = true;
@@ -158,7 +158,7 @@
 			});
 	}
 
-    function startLeavingList() {
+	function startLeavingList() {
 		showLeaveListModal = true;
 	}
 	function leaveList() {
@@ -171,12 +171,10 @@
 		showLeavingListConfirmation = false;
 		showLeaveListModal = false;
 
-        backToHome();
+		backToHome();
 	}
 
 	function startShowingWithList() {
-		emails = data.uids;
-
 		showWithListModal = true;
 	}
 
@@ -189,6 +187,14 @@
 		goto('/');
 	}
 </script>
+
+<svelte:head>
+	{#if !loaded}
+		<title>Todo Manager+: Loading...</title>
+	{:else}
+		<title>Todo Manager+: {data.name}</title>
+	{/if}
+</svelte:head>
 
 <header class="zeroBottomPadding">
 	<hgroup>
@@ -216,12 +222,12 @@
 			<h1>Loading...</h1>
 			<h2>Created on loading...</h2>
 		{:else}
-        <kbd
-        on:click|stopPropagation={startSharingList(data.listId)}
-        on:keydown|stopPropagation={startSharingList(data.listId)}
-        class="floatRight clearBoth"
-        style="cursor: pointer;">Share list</kbd
-    >
+			<kbd
+				on:click|stopPropagation={startSharingList(data.listId)}
+				on:keydown|stopPropagation={startSharingList(data.listId)}
+				class="floatRight clearBoth"
+				style="cursor: pointer;">Share list</kbd
+			>
 
 			<h1 class="breakWord">{data.name}</h1>
 			<h2>Created on {data.createdOn}</h2>
@@ -372,7 +378,7 @@
 			</article>
 		</Modal>
 
-        <Modal bind:showModal={showShareListModal}>
+		<Modal bind:showModal={showShareListModal}>
 			<article class="zeroBottomPadding">
 				<form method="POST" on:submit|preventDefault={shareList}>
 					<h1 class="zeroBottomMargin"><label for="shareList">Share list</label></h1>
@@ -436,7 +442,7 @@
 			<article class="overflowScroll">
 				<h1 class="zeroBottomMargin">Shared with</h1>
 
-				{#each emails as email (email)}
+				{#each data.uids as email (email)}
 					<li>{email}</li>
 				{/each}
 			</article>
