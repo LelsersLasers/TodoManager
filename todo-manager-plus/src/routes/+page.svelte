@@ -4,6 +4,8 @@
 		createMainCollection,
 		updateMainCollection,
 		deleteMainCollection,
+		shareMainCollection,
+		leaveMainCollection,
 		signInWithGoogle,
 		signOutWithGoogle,
 		currentUserStore
@@ -22,8 +24,18 @@
 	let editingListName = '';
 
 	let showDeleteListModal = false;
-	let deletingListId = '';
 	let deletingListConfirmation = false;
+
+	let showShareListModal = false;
+	let sharingListId = '';
+	let sharingEmail = '';
+	let shareMessage = 'Email address';
+
+	let showLeaveListModal = false;
+	let showLeavingListConfirmation = false;
+
+	let showWithListModal = false;
+	let emails = [];
 
 	let currentUserLoading = true;
 	let snapshotLoading = true;
@@ -34,13 +46,13 @@
 	let unsubFromUser = () => {};
 
 	async function updateLoginStatus(u) {
+		unsubFromLists();
 		if (u) {
 			unsubFromLists = await listenerMainCollection((arr) => {
 				lists = arr;
 				if (snapshotLoading) snapshotLoading = false;
 			});
 		} else {
-			unsubFromLists();
 			lists = [];
 			unsubFromLists = () => {};
 			snapshotLoading = true;
@@ -64,6 +76,9 @@
 
 	let createListText = '';
 	function createList() {
+		createListText = createListText.trim();
+		if (createListText.length === 0) return;
+
 		createMainCollection(createListText);
 		createListText = '';
 		showCreateListModal = false;
@@ -80,18 +95,66 @@
 		editingListId = '';
 		editingListName = '';
 		showEditListModal = false;
+
+		deletingListConfirmation = false;
 	}
 
-	function startDeletingList(id) {
-		deletingListId = id;
+	function startDeletingList() {
 		showDeleteListModal = true;
 	}
 	function deleteList() {
-		deleteMainCollection(deletingListId);
+		deleteMainCollection(editingListId);
 
-		deletingListId = '';
+		editingListId = '';
+		editingListName = '';
+		showEditListModal = false;
+
 		deletingListConfirmation = false;
 		showDeleteListModal = false;
+	}
+
+	function startSharingList(id) {
+		sharingListId = id;
+		sharingEmail = '';
+		showShareListModal = true;
+		shareMessage = 'Email address';
+
+		showLeavingListConfirmation = false;
+	}
+	function shareList() {
+		sharingEmail = sharingEmail.trim();
+		if (sharingEmail.length === 0) return;
+
+		shareMainCollection(sharingListId, sharingEmail)
+			.then(() => {
+				shareMessage = `Shared list with ${sharingEmail}`;
+			})
+			.catch((err) => {
+				shareMessage = `${err.data.message}`;
+			})
+			.finally(() => {
+				sharingEmail = '';
+			});
+	}
+
+	function startLeavingList() {
+		showLeaveListModal = true;
+	}
+	function leaveList() {
+		leaveMainCollection(sharingListId);
+
+		sharingListId = '';
+		sharingEmail = '';
+		showShareListModal = false;
+
+		showLeavingListConfirmation = false;
+		showLeaveListModal = false;
+	}
+
+	function startShowingWithList() {
+		emails = lists.find((list) => list.id === sharingListId).uids;
+
+		showWithListModal = true;
 	}
 
 	function signIn() {
@@ -110,7 +173,7 @@
 			<img
 				class="floatRight"
 				src={$currentUserStore.photoURL}
-				alt=""
+				alt="?"
 				title="Signed in as {$currentUserStore.displayName}. Click to sign out."
 				on:click={() => (showSignoutModal = true)}
 				on:keydown={() => (showSignoutModal = true)}
@@ -172,7 +235,7 @@
 							on:keydown={redirectToList(list.id)}
 							style="cursor: pointer;"
 						>
-							<td>{list.name}</td>
+							<td class="breakWord">{list.name}</td>
 							<td class="zeroWidth zeroWidthPadding">{list.count}</td>
 							<td class="zeroWidth zeroWidthPadding">
 								<kbd
@@ -183,9 +246,9 @@
 							</td>
 							<td class="zeroWidth zeroWidthPadding">
 								<kbd
-									on:click|stopPropagation={startDeletingList(list.id)}
-									on:keydown|stopPropagation={startDeletingList(list.id)}
-									style="cursor: pointer;">Delete</kbd
+									on:click|stopPropagation={startSharingList(list.id)}
+									on:keydown|stopPropagation={startSharingList(list.id)}
+									style="cursor: pointer;">Share</kbd
 								>
 							</td>
 						</tr>
@@ -207,10 +270,11 @@
 			</article>
 		{/if}
 
-		<button
-			class="stickyFooter zeroBottomMargin nintyWidth"
-			on:click={() => (showCreateListModal = true)}>Create new list</button
-		>
+		<div class="stickyFooter zeroBottomMargin nintyWidth">
+			<button class="zeroBottomMargin" on:click={() => (showCreateListModal = true)}>
+				Create new list
+			</button>
+		</div>
 
 		<Modal bind:showModal={showCreateListModal}>
 			<article class="zeroBottomPadding">
@@ -227,7 +291,8 @@
 						autocomplete="off"
 						bind:value={createListText}
 					/>
-					<input type="submit" value="Create" />
+					<!-- floatRight just makes it float to get the margins/padding correct -->
+					<input class="floatRight" type="submit" value="Create" />
 				</form>
 			</article>
 		</Modal>
@@ -245,20 +310,26 @@
 						autocomplete="off"
 						bind:value={editingListName}
 					/>
-					<input type="submit" value="Update" />
+					<input class="eightyWidth floatLeft" type="submit" value="Update" />
+					<input
+						class="fifteenWidth floatRight zeroPadding"
+						type="reset"
+						value="&#128465;"
+						on:click|preventDefault={startDeletingList}
+					/>
 				</form>
 			</article>
 		</Modal>
 
 		<Modal bind:showModal={showDeleteListModal}>
 			<article class="zeroBottomPadding">
-				<form method="POST" on:submit|preventDefault={deleteList}>
+				<form method="POST" on:submit|preventDefault|stopPropagation={deleteList}>
 					<h1 class="zeroBottomMargin">
 						<label for="deleteList">Delete list</label>
 					</h1>
-
 					<label for="deleteList">
-						Are you sure you want to delete this list?
+						Deleting a list will also delete it for all users who have access to it. Are
+						you sure you want to delete this list?
 						<input
 							type="checkbox"
 							role="switch"
@@ -267,18 +338,90 @@
 							bind:checked={deletingListConfirmation}
 						/>
 					</label>
-
-					<input type="submit" value="Delete" disabled={!deletingListConfirmation} />
+					<input
+						class="floatRight"
+						type="submit"
+						value="Delete"
+						disabled={!deletingListConfirmation}
+					/>
 				</form>
+			</article>
+		</Modal>
+
+		<Modal bind:showModal={showShareListModal}>
+			<article class="zeroBottomPadding">
+				<form method="POST" on:submit|preventDefault={shareList}>
+					<h1 class="zeroBottomMargin"><label for="shareList">Share list</label></h1>
+					<input
+						type="text"
+						id="shareList"
+						name="shareList"
+						placeholder={shareMessage}
+						required
+						autocomplete="on"
+						bind:value={sharingEmail}
+					/>
+
+					<input class="halfEmBottomMargin" type="submit" value="Share" />
+					<input
+						class="fiftyWidthWithSpace floatLeft zeroPadding"
+						type="reset"
+						value="Shared with"
+						on:click|preventDefault={startShowingWithList}
+					/>
+					<input
+						class="fiftyWidthWithSpace floatRight zeroPadding"
+						type="reset"
+						value="Leave"
+						on:click|preventDefault={startLeavingList}
+					/>
+				</form>
+			</article>
+		</Modal>
+
+		<Modal bind:showModal={showLeaveListModal}>
+			<article class="zeroBottomPadding">
+				<form method="POST" on:submit|preventDefault|stopPropagation={leaveList}>
+					<h1 class="zeroBottomMargin">
+						<label for="leaveList">Leave list</label>
+					</h1>
+
+					<label for="leaveList">
+						Leaving a list will mean you will no longer be able to access it. Are you
+						sure you want to leave this list?
+						<input
+							type="checkbox"
+							role="switch"
+							id="leaveList"
+							name="leaveList"
+							bind:checked={showLeavingListConfirmation}
+						/>
+					</label>
+
+					<input
+						class="floatRight"
+						type="submit"
+						value="Leave"
+						disabled={!showLeavingListConfirmation}
+					/>
+				</form>
+			</article>
+		</Modal>
+
+		<Modal bind:showModal={showWithListModal}>
+			<article class="overflowScroll">
+				<h1 class="zeroBottomMargin">Shared with</h1>
+
+				{#each emails as email (email)}
+					<li>{email}</li>
+				{/each}
 			</article>
 		</Modal>
 
 		<Modal bind:showModal={showSignoutModal}>
 			<article class="zeroBottomPadding">
 				<form method="POST" on:submit|preventDefault={signOutWithGoogle}>
-					<h1 class="zeroBottomMargin">
-						<label for="deleteList">Sign out?</label>
-					</h1>
+					<h1 class="zeroBottomMargin">Sign out?</h1>
 					<p>Currently signed in as {$currentUserStore.displayName}</p>
 					<br />
 

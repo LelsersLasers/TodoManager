@@ -7,7 +7,15 @@
 }
 
 .eightyWidth {
-	width: 80%;
+	width: 80% !important;
+}
+
+.fiftyWidthWithSpace {
+	width: 48.75% !important;
+}
+
+.zeroWidth {
+	width: 0%;
 }
 
 .fiveLeftMargin {
@@ -30,17 +38,21 @@
 	padding-bottom: 0;
 }
 
-.zeroWidth {
-	width: 0%;
-}
-
 .zeroWidthPadding {
 	padding-left: 0.25em;
 	padding-right: 0.25em;
 }
 
+.halfEmBottomMargin {
+	margin-bottom: 0.5em !important;
+}
+
+.zeroPadding {
+	padding: 0 !important;
+}
+
 .threeEmBottomMargin {
-    margin-bottom: 3em;
+	margin-bottom: 3em;
 }
 
 .floatLeft {
@@ -51,14 +63,37 @@
 	float: right;
 }
 
+.clearBoth {
+	clear: both;
+	margin-top: 0.4em;
+}
+
+.breakWord {
+	word-break: break-word;
+}
+
+.overflowScroll {
+	overflow-y: scroll;
+	height: 60vh;
+	width: 90vw;
+}
+
 img {
 	border-radius: 50%;
 	height: 2em;
+	/* width: 2em; */
 	margin-top: 0.5em;
 }
 
 .stickyFooter {
 	position: fixed;
-	left: 5%;
-	bottom: 2.5%;
+	left: 0;
+	bottom: 0;
+	background: var(--background-color);
+	width: 100%;
+
+	padding-bottom: 2.5%;
+	padding-top: 1%;
+	padding-left: 5%;
+	padding-right: 5%;
 }

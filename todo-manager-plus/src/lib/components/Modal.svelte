@@ -65,4 +65,20 @@
 	input[type='reset'] {
 		display: block;
 	}
+
+	/* dialog {
+		max-width: 32em;
+		border-radius: 0.2em;
+		border: none;
+		padding: 0;
+	}
+	dialog::backdrop {
+		background: rgba(0, 0, 0, 0.3);
+	}
+	dialog > div {
+		padding: 1em;
+	}
+	input[type='reset'] {
+		display: block;
+	} */
 </style>

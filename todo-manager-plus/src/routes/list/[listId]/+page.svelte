@@ -9,7 +9,9 @@
 		deleteSubCollection,
 		signOutWithGoogle,
 		currentUserStore,
-		getMainCollectionDoc
+		listenerMainCollectionDoc,
+		shareMainCollection,
+		leaveMainCollection
 	} from '$lib/firebase/firebase';
 	import { onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -28,43 +30,54 @@
 	let deletingTodoId = '';
 	let deletingTodoConfirmation = false;
 
+	let showShareListModal = false;
+	let sharingListId = '';
+	let sharingEmail = '';
+	let shareMessage = 'Email address';
+
+	let showLeaveListModal = false;
+	let showLeavingListConfirmation = false;
+
+	let showWithListModal = false;
+
 	let snapshotLoading = true;
 
 	let todos = [];
 	let unsubFromTodos = () => {};
+	let unsubFromDoc = () => {};
 	let unsubFromUser = () => {};
 
 	let loaded = false;
-	async function load() {
-		const listData = await getMainCollectionDoc(data.listId);
-
-		const timestampDate = listData.timestamp.toDate();
-		const createdOn = `${
-			timestampDate.getMonth() + 1
-		}/${timestampDate.getDate()}/${timestampDate.getFullYear()}`;
-
-		data = {
-			...data,
-			count: listData.count,
-			name: listData.name,
-			id: listData.id,
-			createdOn
-		};
-
-		unsubFromTodos = await listenerSubCollection(data.id, (arr) => {
-			todos = arr;
-			if (snapshotLoading) snapshotLoading = false;
-		});
-	}
-
 	let timeoutId;
 	async function updateLoginStatus(u) {
 		if (u) {
 			if (timeoutId) clearTimeout(timeoutId);
 			if (!loaded) {
-				loaded = true;
 				try {
-					await load();
+					unsubFromDoc = await listenerMainCollectionDoc(
+						data.listId,
+						async (docData) => {
+							const timestampDate = docData.timestamp.toDate();
+							const createdOn = `${
+								timestampDate.getMonth() + 1
+							}/${timestampDate.getDate()}/${timestampDate.getFullYear()}`;
+
+							data.count = docData.count;
+							data.name = docData.name;
+							data.id = docData.id;
+							data.uids = docData.uids;
+							data.createdOn = createdOn;
+
+							if (!loaded) {
+								unsubFromTodos = await listenerSubCollection(data.id, (arr) => {
+									todos = arr;
+									if (snapshotLoading) snapshotLoading = false;
+								});
+								loaded = true;
+							}
+						},
+						backToHome
+					);
 				} catch (e) {
 					if (e.code === 'permission-denied') {
 						backToHome();
@@ -81,6 +94,7 @@
 	});
 	onDestroy(() => {
 		unsubFromTodos();
+		unsubFromDoc();
 		unsubFromUser();
 	});
 
@@ -110,14 +124,58 @@
 
 	function startDeletingTodo(id) {
 		deletingTodoId = id;
+		deletingTodoConfirmation = false;
 		showDeleteTodoModal = true;
 	}
 	function deleteTodo() {
 		deleteSubCollection(data.id, deletingTodoId);
-
 		deletingTodoId = '';
 		deletingTodoConfirmation = false;
 		showDeleteTodoModal = false;
+	}
+
+	function startSharingList(id) {
+		sharingListId = id;
+		sharingEmail = '';
+		showShareListModal = true;
+		shareMessage = 'Email address';
+
+		showLeavingListConfirmation = false;
+	}
+	function shareList() {
+		sharingEmail = sharingEmail.trim();
+		if (sharingEmail.length === 0) return;
+
+		shareMainCollection(sharingListId, sharingEmail)
+			.then(() => {
+				shareMessage = `Shared list with ${sharingEmail}`;
+			})
+			.catch((err) => {
+				shareMessage = `${err.data.message}`;
+			})
+			.finally(() => {
+				sharingEmail = '';
+			});
+	}
+
+	function startLeavingList() {
+		showLeaveListModal = true;
+	}
+	function leaveList() {
+		leaveMainCollection(sharingListId);
+
+		sharingListId = '';
+		sharingEmail = '';
+		showShareListModal = false;
+
+		showLeavingListConfirmation = false;
+		showLeaveListModal = false;
+
+		backToHome();
+	}
+
+	function startShowingWithList() {
+		showWithListModal = true;
 	}
 
 	function signOutAndBackToHome() {
@@ -130,13 +188,21 @@
 	}
 </script>
 
+<svelte:head>
+	{#if !loaded}
+		<title>Todo Manager+: Loading...</title>
+	{:else}
+		<title>Todo Manager+: {data.name}</title>
+	{/if}
+</svelte:head>
+
 <header class="zeroBottomPadding">
 	<hgroup>
 		{#if $currentUserStore != null}
 			<img
 				class="floatRight"
 				src={$currentUserStore.photoURL}
-				alt=""
+				alt="?"
 				title="Signed in as {$currentUserStore.displayName}. Click to sign out."
 				on:click={() => (showSignoutModal = true)}
 				on:keydown={() => (showSignoutModal = true)}
@@ -149,11 +215,21 @@
 				alt=""
 			/>
 		{/if}
+
 		{#if !loaded}
+			<kbd class="floatRight clearBoth" style="cursor: pointer;">Share list</kbd>
+
 			<h1>Loading...</h1>
 			<h2>Created on loading...</h2>
 		{:else}
-			<h1>{data.name}</h1>
+			<kbd
+				on:click|stopPropagation={startSharingList(data.listId)}
+				on:keydown|stopPropagation={startSharingList(data.listId)}
+				class="floatRight clearBoth"
+				style="cursor: pointer;">Share list</kbd
+			>
+
+			<h1 class="breakWord">{data.name}</h1>
 			<h2>Created on {data.createdOn}</h2>
 		{/if}
 	</hgroup>
@@ -180,7 +256,7 @@
 				<tbody>
 					{#each todos as todo (todo.id)}
 						<tr>
-							<td>
+							<td class="breakWord">
 								{#if todo.finished}
 									<del>{todo.name}</del>
 								{:else}
@@ -205,7 +281,7 @@
 								<kbd
 									on:click|stopPropagation={startDeletingTodo(todo.id)}
 									on:keydown|stopPropagation={startDeletingTodo(todo.id)}
-									style="cursor: pointer;">Delete</kbd
+									style="cursor: pointer;">&#128465;</kbd
 								>
 							</td>
 						</tr>
@@ -254,7 +330,7 @@
 						autocomplete="off"
 						bind:value={createTodoText}
 					/>
-					<input type="submit" value="Create" />
+					<input class="floatRight" type="submit" value="Create" />
 				</form>
 			</article>
 		</Modal>
@@ -272,7 +348,7 @@
 						autocomplete="off"
 						bind:value={editingTodoName}
 					/>
-					<input type="submit" value="Update" />
+					<input class="floatRight" type="submit" value="Update" />
 				</form>
 			</article>
 		</Modal>
@@ -292,8 +368,83 @@
 						/>
 					</label>
 
-					<input type="submit" value="Delete" disabled={!deletingTodoConfirmation} />
+					<input
+						class="floatRight"
+						type="submit"
+						value="Delete"
+						disabled={!deletingTodoConfirmation}
+					/>
 				</form>
+			</article>
+		</Modal>
+
+		<Modal bind:showModal={showShareListModal}>
+			<article class="zeroBottomPadding">
+				<form method="POST" on:submit|preventDefault={shareList}>
+					<h1 class="zeroBottomMargin"><label for="shareList">Share list</label></h1>
+					<input
+						type="text"
+						id="shareList"
+						name="shareList"
+						placeholder={shareMessage}
+						required
+						autocomplete="on"
+						bind:value={sharingEmail}
+					/>
+
+					<input class="halfEmBottomMargin" type="submit" value="Share" />
+					<input
+						class="fiftyWidthWithSpace floatLeft zeroPadding"
+						type="reset"
+						value="Shared with"
+						on:click|preventDefault={startShowingWithList}
+					/>
+					<input
+						class="fiftyWidthWithSpace floatRight zeroPadding"
+						type="reset"
+						value="Leave"
+						on:click|preventDefault={startLeavingList}
+					/>
+				</form>
+			</article>
+		</Modal>
+
+		<Modal bind:showModal={showLeaveListModal}>
+			<article class="zeroBottomPadding">
+				<form method="POST" on:submit|preventDefault|stopPropagation={leaveList}>
+					<h1 class="zeroBottomMargin">
+						<label for="leaveList">Leave list</label>
+					</h1>
+
+					<label for="leaveList">
+						Leaving a list will mean you will no longer be able to access it. Are you
+						sure you want to leave this list?
+						<input
+							type="checkbox"
+							role="switch"
+							id="leaveList"
+							name="leaveList"
+							bind:checked={showLeavingListConfirmation}
+						/>
+					</label>
+
+					<input
+						class="floatRight"
+						type="submit"
+						value="Leave"
+						disabled={!showLeavingListConfirmation}
+					/>
+				</form>
+			</article>
+		</Modal>
+
+		<Modal bind:showModal={showWithListModal}>
+			<article class="overflowScroll">
+				<h1 class="zeroBottomMargin">Shared with</h1>
+
+				{#each data.uids as email (email)}
+					<li>{email}</li>
+				{/each}
 			</article>
 		</Modal>
 
