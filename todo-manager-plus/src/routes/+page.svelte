@@ -334,6 +334,7 @@
 						placeholder="List name"
 						required
 						autocomplete="off"
+                        spellcheck="true"
 						bind:value={createListText}
 					/>
 					<!-- floatRight just makes it float to get the margins/padding correct -->
@@ -353,6 +354,7 @@
 						placeholder="List name"
 						required
 						autocomplete="off"
+                        spellcheck="true"
 						bind:value={editingListName}
 					/>
 					<input class="eightyWidth floatLeft" type="submit" value="Update" />

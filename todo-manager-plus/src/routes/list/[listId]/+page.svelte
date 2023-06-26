@@ -384,6 +384,7 @@
 						placeholder="Todo item name"
 						required
 						autocomplete="off"
+                        spellcheck="true"
 						bind:value={createTodoText}
 					/>
 					<input class="floatRight" type="submit" value="Create" />
@@ -402,6 +403,7 @@
 						placeholder="Todo item name"
 						required
 						autocomplete="off"
+                        spellcheck="true"
 						bind:value={editingTodoName}
 					/>
 					<input class="floatRight" type="submit" value="Update" />
@@ -573,6 +575,7 @@
 						placeholder="List name"
 						required
 						autocomplete="off"
+                        spellcheck="true"
 						bind:value={editingListName}
 					/>
 					<input class="eightyWidth floatLeft" type="submit" value="Update" />
