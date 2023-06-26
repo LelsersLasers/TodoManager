@@ -9,7 +9,7 @@
 		updateSubCollectionOrder,
 		deleteSubCollection,
 		signOutWithGoogle,
-		currentUserStore,
+		listenerOnAuthStateChanged,
 		listenerMainCollectionDoc,
 		shareMainCollection,
 		leaveMainCollection,
@@ -22,7 +22,7 @@
 
 	import Modal from '$lib/components/Modal.svelte';
 
-	let userEmail = '';
+	let user;
 
 	let showSignoutModal = false;
 
@@ -69,8 +69,8 @@
 	let loaded = false;
 	let timeoutId;
 	async function updateLoginStatus(u) {
+		if (!leaving) user = u;
 		if (u) {
-			userEmail = u.email;
 			if (timeoutId) clearTimeout(timeoutId);
 			if (!loaded) {
 				try {
@@ -105,13 +105,13 @@
 					}
 				}
 			}
-		} else {
+		} else if (!leaving) {
 			timeoutId = setTimeout(backToHome, 1000);
 		}
 	}
 
 	onMount(() => {
-		unsubFromUser = currentUserStore.subscribe(updateLoginStatus);
+		unsubFromUser = listenerOnAuthStateChanged(updateLoginStatus);
 	});
 	onDestroy(() => {
 		unsubFromTodos();
@@ -297,12 +297,15 @@
 		});
 	}
 
+	let leaving = false;
 	function signOutAndBackToHome() {
+		leaving = true;
 		signOutWithGoogle();
 		backToHome();
 	}
 
 	function backToHome() {
+		leaving = true;
 		goto('/');
 	}
 </script>
@@ -317,12 +320,12 @@
 
 <header class="zeroBottomPadding">
 	<hgroup class="threeEmBottomMargin">
-		{#if $currentUserStore != null}
+		{#if user}
 			<img
 				class="floatRight"
-				src={$currentUserStore.photoURL}
+				src={user.photoURL}
 				alt="?"
-				title="Signed in as {$currentUserStore.displayName}. Click to sign out."
+				title="Signed in as {user.displayName}. Click to sign out."
 				on:click={() => (showSignoutModal = true)}
 				on:keydown={() => (showSignoutModal = true)}
 				style="cursor: pointer;"
@@ -645,7 +648,7 @@
 							<tr>
 								<td class="modifiedTd breakWord">{email}</td>
 								<td class="modifiedTd zeroWidth zeroWidthPadding">
-									{#if email == userEmail}
+									{#if user && email == user.email}
 										<kbd
 											class="floatRight"
 											on:click|stopPropagation={startLeavingList}
@@ -720,14 +723,14 @@
 			</article>
 		</Modal>
 
-		{#if $currentUserStore != null}
+		{#if user}
 			<Modal bind:showModal={showSignoutModal}>
 				<article class="zeroBottomPadding">
 					<form method="POST" on:submit|preventDefault={signOutAndBackToHome}>
 						<h1 class="zeroBottomMargin">
 							<label for="deleteList">Sign out?</label>
 						</h1>
-						<p>Currently signed in as {$currentUserStore.displayName}</p>
+						<p>Currently signed in as {user.displayName}</p>
 						<br />
 
 						<input type="submit" value="Sign out" />

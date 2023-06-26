@@ -24,8 +24,6 @@ import {
 	GoogleAuthProvider
 } from 'firebase/auth';
 
-import { writable } from 'svelte/store';
-
 import { fail } from '@sveltejs/kit';
 import { goto } from '$app/navigation';
 
@@ -45,12 +43,10 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-let user = null;
-export const currentUserStore = writable(user);
-onAuthStateChanged(auth, (u) => {
-	user = u;
-	currentUserStore.set(user);
-});
+export function listenerOnAuthStateChanged(callback) {
+	const unsubscribe = onAuthStateChanged(auth, callback);
+	return unsubscribe;
+}
 
 export async function signInWithGoogle() {
 	await signInWithPopup(auth, provider);
@@ -77,7 +73,7 @@ function getMainCollectionQuery() {
 	const mainCollectionQuery = query(
 		mainCollection,
 		...mainCollectionQueryParams,
-		where('uids', 'array-contains', user.email)
+		where('uids', 'array-contains', auth.currentUser.email)
 	);
 	return mainCollectionQuery;
 }
@@ -92,7 +88,7 @@ export async function createMainCollection(name) {
 		name: trimedName,
 		count: 0,
 		order: 0,
-		uids: [user.email],
+		uids: [auth.currentUser.email],
 		timestamp: serverTimestamp()
 	};
 	addDoc(mainCollection, docData).then((docRef) => goto(`/list/${docRef.id}`));
@@ -168,7 +164,7 @@ export async function leaveMainCollection(id) {
 	if (docSnap.exists()) {
 		const docData = docSnap.data();
 		const oldUids = docData.uids;
-		const newUids = oldUids.filter((uid) => uid !== user.email);
+		const newUids = oldUids.filter((uid) => uid !== auth.currentUser.email);
 		if (newUids.length === 0) {
 			await deleteMainCollection(id);
 			return;
@@ -187,7 +183,7 @@ export async function leaveMainCollection(id) {
 			const subDocSnap = await getDoc(subDocRef);
 			const subDocData = subDocSnap.data();
 			const oldUids = subDocData.uids;
-			const newUids = oldUids.filter((uid) => uid !== user.email);
+			const newUids = oldUids.filter((uid) => uid !== auth.currentUser.email);
 			updateDoc(subDocRef, {
 				uids: newUids
 			});
@@ -276,7 +272,7 @@ function getSubCollectionQuery(id) {
 	const subCollectionQuery = query(
 		subCollection,
 		...subCollectionQueryParams,
-		where('uids', 'array-contains', user.email)
+		where('uids', 'array-contains', auth.currentUser.email)
 	);
 	return subCollectionQuery;
 }
@@ -296,7 +292,6 @@ export async function createSubCollection(id, name) {
 	const docData = {
 		name: trimedName,
 		finished: false,
-		// uids: [user.email], // Doesn't work, need to get the doc first
 		order: 0,
 		timestamp: serverTimestamp()
 	};
