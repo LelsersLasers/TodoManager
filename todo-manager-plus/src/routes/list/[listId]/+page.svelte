@@ -6,6 +6,7 @@
 		createSubCollection,
 		updateSubCollection,
 		updateSubCollectionFinished,
+		updateSubCollectionOrder,
 		deleteSubCollection,
 		signOutWithGoogle,
 		currentUserStore,
@@ -228,10 +229,73 @@
 		backToHome();
 	}
 
-	function moveTodoUp(id) {
+	function noNegativeTodoOrders(idsToUpdate) {
+		let todoOrders = todos.map((t) => t.order);
+		let minTodoOrder = Math.min(...todoOrders);
+		if (minTodoOrder < 0) {
+			let offset = Math.abs(minTodoOrder);
+			todos.forEach((t) => {
+				t.order += offset;
+			});
+			idsToUpdate = todos.map((t) => t.id);
+		}
+		return idsToUpdate;
+	}
 
-    }
-	function moveTodoDown(id) {}
+	function moveTodoUp(id) {
+		// the following is guaranteed to be true
+		// {#if (todos[index - 1]) && (todos[index - 1].finished == todo.finished)}
+		let idsToUpdate = [];
+
+		let todo = todos.find((t) => t.id == id);
+		let index = todos.indexOf(todo);
+
+		let aboveTodo = todos[index - 1];
+		todo.order = aboveTodo.order - 1;
+		index--;
+
+		idsToUpdate.push(todo.id);
+
+		while (todos[index - 1] && todos[index - 1].finished == todo.finished) {
+			todos[index - 1].order = todos[index].order - 2;
+			index--;
+			idsToUpdate.push(todos[index].id);
+		}
+
+		idsToUpdate = noNegativeTodoOrders(idsToUpdate);
+
+		idsToUpdate.forEach((id) => {
+			const todoToUpdate = todos.find((t) => t.id == id);
+			updateSubCollectionOrder(data.id, id, todoToUpdate.order);
+		});
+	}
+	function moveTodoDown(id) {
+		// the following is guaranteed to be true
+		// {#if (todos[index + 1]) && (todos[index + 1].finished == todo.finished)}
+
+		let idsToUpdate = [];
+
+		let todo = todos.find((t) => t.id == id);
+		let index = todos.indexOf(todo);
+
+		let belowTodo = todos[index + 1];
+		todo.order = belowTodo.order + 1;
+		index++;
+
+		idsToUpdate.push(todo.id);
+
+		while (todos[index + 1] && todos[index + 1].finished == todo.finished) {
+			todos[index + 1].order = todos[index].order + 2;
+			index++;
+			idsToUpdate.push(todos[index].id);
+		}
+
+		idsToUpdate = noNegativeTodoOrders(idsToUpdate);
+
+		idsToUpdate.forEach((id) => {
+			updateSubCollectionOrder(data.id, id, todos.find((t) => t.id == id).order);
+		});
+	}
 
 	function signOutAndBackToHome() {
 		signOutWithGoogle();
@@ -338,16 +402,16 @@
 						<tr>
 							{#if editingOrder}
 								<td class="zeroWidth zeroWidthPadding">
-                                    {#if (todos[index - 1]) && (todos[index - 1].finished == todo.finished)}
-                                        <button on:click={moveTodoUp(todo.id)} class="tiny tinyMargin">
-                                            &uarr;
-                                        </button>
-                                    {/if}
-                                    {#if (todos[index + 1]) && (todos[index + 1].finished == todo.finished)}
-                                        <button on:click={moveTodoDown(todo.id)} class="tiny">
-                                            &darr;
-                                        </button>
-                                    {/if}
+									{#if todos[index - 1] && todos[index - 1].finished == todo.finished}
+										<button on:click={moveTodoUp(todo.id)} class="tiny tinyMargin">
+											&uarr;
+										</button>
+									{/if}
+									{#if todos[index + 1] && todos[index + 1].finished == todo.finished}
+										<button on:click={moveTodoDown(todo.id)} class="tiny">
+											&darr;
+										</button>
+									{/if}
 								</td>
 							{/if}
 							<td class="breakWord">
