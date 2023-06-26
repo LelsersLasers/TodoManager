@@ -210,9 +210,14 @@
 			</p>
 		</article>
 
-		<button class="stickyFooter zeroBottomMargin nintyWidth" on:click={signIn}
-			>Sign in with Google</button
-		>
+		<div class="stickyFooter zeroBottomMargin textAlignCenter">
+			<button
+				class="footerWidth zeroBottomMargin marginZeroAuto nintyFiveWidth"
+				on:click={signIn}
+			>
+				Sign in with Google
+			</button>
+		</div>
 	{:else if snapshotLoading}
 		<h5>Loading</h5>
 		<article class="zeroTopMargin" aria-busy="true" />
@@ -270,8 +275,11 @@
 			</article>
 		{/if}
 
-		<div class="stickyFooter zeroBottomMargin nintyWidth">
-			<button class="zeroBottomMargin" on:click={() => (showCreateListModal = true)}>
+		<div class="stickyFooter zeroBottomMargin textAlignCenter">
+			<button
+				class="footerWidth zeroBottomMargin marginZeroAuto nintyFiveWidth"
+				on:click={() => (showCreateListModal = true)}
+			>
 				Create new list
 			</button>
 		</div>

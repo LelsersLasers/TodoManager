@@ -78,7 +78,6 @@ function getMainCollectionQuery() {
 	return mainCollectionQuery;
 }
 
-
 export async function createMainCollection(name) {
 	const trimedName = name.trim();
 	if (!trimedName || trimedName.length == 0) {

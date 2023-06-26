@@ -303,18 +303,20 @@
 			</article>
 		{/if}
 
-		<div class="stickyFooter zeroBottomMargin nintyWidth">
-			<input
-				class="zeroBottomMargin fifteenWidth floatLeft"
-				style="cursor: pointer"
-				type="reset"
-				value="&blacktriangleleft;"
-				on:click|preventDefault={backToHome}
-			/>
-			<button
-				class="zeroBottomMargin eightyWidth floatRight"
-				on:click={() => (showCreateTodoModal = true)}>Create new todo</button
-			>
+		<div class="stickyFooter zeroBottomMargin textAlignCenter">
+			<div class="footerWidth zeroBottomMargin marginZeroAuto nintyFiveWidth">
+				<input
+					class="zeroBottomMargin fifteenWidth floatLeft"
+					style="cursor: pointer"
+					type="reset"
+					value="&blacktriangleleft;"
+					on:click|preventDefault={backToHome}
+				/>
+				<button
+					class="zeroBottomMargin eightyWidth floatRight"
+					on:click={() => (showCreateTodoModal = true)}>Create new todo</button
+				>
+			</div>
 		</div>
 
 		<Modal bind:showModal={showCreateTodoModal}>
