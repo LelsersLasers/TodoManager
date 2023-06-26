@@ -374,7 +374,7 @@
 		</div>
 
 		<Modal bind:showModal={showCreateTodoModal}>
-			<article class="zeroBottomPadding">
+			<article class="zeroBottomPadding smallArticleTopPadding">
 				<form method="POST" on:submit|preventDefault={createTodo}>
 					<h1 class="zeroBottomMargin"><label for="createTodo">Create todo</label></h1>
 					<input
@@ -392,7 +392,7 @@
 		</Modal>
 
 		<Modal bind:showModal={showEditTodoModal}>
-			<article class="zeroBottomPadding">
+			<article class="zeroBottomPadding smallArticleTopPadding">
 				<form method="POST" on:submit|preventDefault={editTodo}>
 					<h1 class="zeroBottomMargin"><label for="editTodo">Update todo</label></h1>
 					<input
@@ -410,7 +410,7 @@
 		</Modal>
 
 		<Modal bind:showModal={showDeleteTodoModal}>
-			<article class="zeroBottomPadding">
+			<article class="zeroBottomPadding smallArticleTopPadding">
 				<form method="POST" on:submit|preventDefault={deleteTodo}>
 					<h1 class="zeroBottomMargin"><label for="deleteList">Delete todo</label></h1>
 					<label for="deleteList">
@@ -435,7 +435,7 @@
 		</Modal>
 
 		<Modal bind:showModal={showShareListModal}>
-			<article class="zeroBottomPadding">
+			<article class="zeroBottomPadding smallArticleTopPadding">
 				<form method="POST" on:submit|preventDefault={shareList}>
 					<h1 class="zeroBottomMargin"><label for="shareList">Share list</label></h1>
 					<input
@@ -466,7 +466,7 @@
 		</Modal>
 
 		<Modal bind:showModal={showLeaveListModal}>
-			<article class="zeroBottomPadding">
+			<article class="zeroBottomPadding smallArticleTopPadding">
 				<form method="POST" on:submit|preventDefault|stopPropagation={leaveList}>
 					<h1 class="zeroBottomMargin">
 						<label for="leaveList">Leave list</label>
@@ -495,7 +495,7 @@
 		</Modal>
 
         <Modal bind:showModal={showRemoveListModal}>
-			<article class="zeroBottomPadding">
+			<article class="zeroBottomPadding smallArticleTopPadding">
 				<form method="POST" on:submit|preventDefault|stopPropagation={removeList}>
 					<h1 class="zeroBottomMargin">
 						<label for="removeList">Remove user</label>
@@ -563,7 +563,7 @@
 		</Modal>
 
         <Modal bind:showModal={showEditListModal}>
-			<article class="zeroBottomPadding">
+			<article class="zeroBottomPadding smallArticleTopPadding">
 				<form method="POST" on:submit|preventDefault={editList}>
 					<h1 class="zeroBottomMargin"><label for="editList">Update list</label></h1>
 					<input
@@ -587,7 +587,7 @@
 		</Modal>
 
 		<Modal bind:showModal={showDeleteListModal}>
-			<article class="zeroBottomPadding">
+			<article class="zeroBottomPadding smallArticleTopPadding">
 				<form method="POST" on:submit|preventDefault|stopPropagation={deleteList}>
 					<h1 class="zeroBottomMargin">
 						<label for="deleteList">Delete list</label>

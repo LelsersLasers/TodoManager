@@ -322,7 +322,7 @@
 		</div>
 
 		<Modal bind:showModal={showCreateListModal}>
-			<article class="zeroBottomPadding">
+			<article class="zeroBottomPadding smallArticleTopPadding">
 				<form method="POST" on:submit|preventDefault={createList}>
 					<h1 class="zeroBottomMargin">
 						<label for="createList">Create list</label>
@@ -343,7 +343,7 @@
 		</Modal>
 
 		<Modal bind:showModal={showEditListModal}>
-			<article class="zeroBottomPadding">
+			<article class="zeroBottomPadding smallArticleTopPadding">
 				<form method="POST" on:submit|preventDefault={editList}>
 					<h1 class="zeroBottomMargin"><label for="editList">Update list</label></h1>
 					<input
@@ -367,7 +367,7 @@
 		</Modal>
 
 		<Modal bind:showModal={showDeleteListModal}>
-			<article class="zeroBottomPadding">
+			<article class="zeroBottomPadding smallArticleTopPadding">
 				<form method="POST" on:submit|preventDefault|stopPropagation={deleteList}>
 					<h1 class="zeroBottomMargin">
 						<label for="deleteList">Delete list</label>
@@ -394,7 +394,7 @@
 		</Modal>
 
 		<Modal bind:showModal={showShareListModal}>
-			<article class="zeroBottomPadding">
+			<article class="zeroBottomPadding smallArticleTopPadding">
 				<form method="POST" on:submit|preventDefault={shareList}>
 					<h1 class="zeroBottomMargin"><label for="shareList">Share list</label></h1>
 					<input
@@ -425,7 +425,7 @@
 		</Modal>
 
 		<Modal bind:showModal={showLeaveListModal}>
-			<article class="zeroBottomPadding">
+			<article class="zeroBottomPadding smallArticleTopPadding">
 				<form method="POST" on:submit|preventDefault|stopPropagation={leaveList}>
 					<h1 class="zeroBottomMargin">
 						<label for="leaveList">Leave list</label>
@@ -454,7 +454,7 @@
 		</Modal>
 
         <Modal bind:showModal={showRemoveListModal}>
-			<article class="zeroBottomPadding">
+			<article class="zeroBottomPadding smallArticleTopPadding">
 				<form method="POST" on:submit|preventDefault|stopPropagation={removeList}>
 					<h1 class="zeroBottomMargin">
 						<label for="removeList">Remove user</label>

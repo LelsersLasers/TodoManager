@@ -91,6 +91,10 @@ input[type="checkbox"] {
     height: 1.5em;
 }
 
+.smallArticleTopPadding {
+    padding-top: 2rem
+}
+
 img {
 	border-radius: 50%;
 	height: 2em;
