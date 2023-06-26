@@ -373,14 +373,14 @@
 				<kbd
 					on:click={() => (editingOrder = true)}
 					on:keydown={() => (editingOrder = true)}
-					class="floatRight clearBoth"
+					class="floatRight clearBoth stickyOnScroll"
 					style="cursor: pointer;">Edit Order</kbd
 				>
 			{:else}
 				<kbd
 					on:click={() => (editingOrder = false)}
 					on:keydown={() => (editingOrder = false)}
-					class="floatRight clearBoth"
+					class="floatRight clearBoth stickyOnScroll"
 					style="cursor: pointer;">Save Order</kbd
 				>
 			{/if}

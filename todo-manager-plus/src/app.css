@@ -112,6 +112,12 @@ img {
 	margin-top: 0.5em;
 }
 
+.stickyOnScroll {
+	position: -webkit-sticky; /* Safari */
+	position: sticky;
+	top: 2.5%;
+}
+
 .stickyFooter {
 	position: fixed;
 	left: 0;
