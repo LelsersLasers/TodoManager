@@ -11,7 +11,9 @@
 		currentUserStore,
 		listenerMainCollectionDoc,
 		shareMainCollection,
-		leaveMainCollection
+		leaveMainCollection,
+        updateMainCollection,
+		deleteMainCollection
 	} from '$lib/firebase/firebase';
 	import { onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -39,6 +41,13 @@
 	let showLeavingListConfirmation = false;
 
 	let showWithListModal = false;
+
+    let showEditListModal = false;
+	let editingListId = '';
+	let editingListName = '';
+
+	let showDeleteListModal = false;
+	let deletingListConfirmation = false;
 
 	let snapshotLoading = true;
 
@@ -114,7 +123,7 @@
 		editingTodoName = name;
 		showEditTodoModal = true;
 	}
-	function editList() {
+	function editTodo() {
 		updateSubCollection(data.id, editingTodoId, editingTodoName);
 
 		editingTodoId = '';
@@ -163,19 +172,37 @@
 	}
 	function leaveList() {
 		leaveMainCollection(sharingListId);
-
-		sharingListId = '';
-		sharingEmail = '';
-		showShareListModal = false;
-
-		showLeavingListConfirmation = false;
-		showLeaveListModal = false;
-
 		backToHome();
 	}
 
 	function startShowingWithList() {
 		showWithListModal = true;
+	}
+
+    function startEditingList(id, name) {
+		editingListId = id;
+		editingListName = name;
+		showEditListModal = true;
+
+        deletingListConfirmation = false;
+	}
+	function editList() {
+		updateMainCollection(editingListId, editingListName);
+
+		editingListId = '';
+		editingListName = '';
+		showEditListModal = false;
+
+		deletingListConfirmation = false;
+	}
+
+	function startDeletingList() {
+        deletingListConfirmation = false;
+		showDeleteListModal = true;
+	}
+	function deleteList() {
+		deleteMainCollection(editingListId);
+        backToHome();
 	}
 
 	function signOutAndBackToHome() {
@@ -197,7 +224,7 @@
 </svelte:head>
 
 <header class="zeroBottomPadding">
-	<hgroup>
+	<hgroup class="threeEmBottomMargin">
 		{#if $currentUserStore != null}
 			<img
 				class="floatRight"
@@ -218,15 +245,22 @@
 
 		{#if !loaded}
 			<kbd class="floatRight clearBoth" style="cursor: pointer;">Share list</kbd>
+            <kbd class="floatRight clearBoth" style="cursor: pointer;">Edit list</kbd>
 
 			<h1>Loading...</h1>
 			<h2>Created on loading...</h2>
 		{:else}
 			<kbd
-				on:click|stopPropagation={startSharingList(data.listId)}
-				on:keydown|stopPropagation={startSharingList(data.listId)}
+				on:click={startSharingList(data.listId)}
+				on:keydown={startSharingList(data.listId)}
 				class="floatRight clearBoth"
 				style="cursor: pointer;">Share list</kbd
+			>
+            <kbd
+				on:click={startEditingList(data.listId, data.name)}
+				on:keydown={startEditingList(data.listId, data.name)}
+				class="floatRight clearBoth"
+				style="cursor: pointer;">Edit list</kbd
 			>
 
 			<h1 class="breakWord">{data.name}</h1>
@@ -339,7 +373,7 @@
 
 		<Modal bind:showModal={showEditTodoModal}>
 			<article class="zeroBottomPadding">
-				<form method="POST" on:submit|preventDefault={editList}>
+				<form method="POST" on:submit|preventDefault={editTodo}>
 					<h1 class="zeroBottomMargin"><label for="editTodo">Update todo</label></h1>
 					<input
 						type="text"
@@ -449,6 +483,58 @@
 				{/each}
 			</article>
 		</Modal>
+
+        <Modal bind:showModal={showEditListModal}>
+			<article class="zeroBottomPadding">
+				<form method="POST" on:submit|preventDefault={editList}>
+					<h1 class="zeroBottomMargin"><label for="editList">Update list</label></h1>
+					<input
+						type="text"
+						id="editList"
+						name="editList"
+						placeholder="List name"
+						required
+						autocomplete="off"
+						bind:value={editingListName}
+					/>
+					<input class="eightyWidth floatLeft" type="submit" value="Update" />
+					<input
+						class="fifteenWidth floatRight zeroPadding"
+						type="reset"
+						value="&#128465;"
+						on:click|preventDefault={startDeletingList}
+					/>
+				</form>
+			</article>
+		</Modal>
+
+		<Modal bind:showModal={showDeleteListModal}>
+			<article class="zeroBottomPadding">
+				<form method="POST" on:submit|preventDefault|stopPropagation={deleteList}>
+					<h1 class="zeroBottomMargin">
+						<label for="deleteList">Delete list</label>
+					</h1>
+					<label for="deleteList">
+						Deleting a list will also delete it for all users who have access to it. Are
+						you sure you want to delete this list?
+						<input
+							type="checkbox"
+							role="switch"
+							id="deleteList"
+							name="deleteList"
+							bind:checked={deletingListConfirmation}
+						/>
+					</label>
+					<input
+						class="floatRight"
+						type="submit"
+						value="Delete"
+						disabled={!deletingListConfirmation}
+					/>
+				</form>
+			</article>
+		</Modal>
+
 
 		{#if $currentUserStore != null}
 			<Modal bind:showModal={showSignoutModal}>
