@@ -64,7 +64,7 @@ const db = getFirestore(app);
 
 const mainCollectionId = 'lists';
 const mainCollection = collection(db, mainCollectionId);
-const mainCollectionQueryParams = [orderBy('timestamp', 'desc')];
+const mainCollectionQueryParams = [orderBy('order'), orderBy('timestamp', 'desc')];
 
 const subCollectionId = 'todos';
 const subCollectionQueryParams = [
@@ -72,7 +72,6 @@ const subCollectionQueryParams = [
 	orderBy('order'),
 	orderBy('timestamp', 'desc')
 ];
-// const subCollectionQueryParams = [orderBy('finished'), orderBy('timestamp', 'desc')];
 
 function getMainCollectionQuery() {
 	const mainCollectionQuery = query(
@@ -92,6 +91,7 @@ export async function createMainCollection(name) {
 	const docData = {
 		name: trimedName,
 		count: 0,
+		order: 0,
 		uids: [user.email],
 		timestamp: serverTimestamp()
 	};
@@ -120,6 +120,13 @@ export async function updateMainCollection(id, newName) {
 	const docRef = doc(db, mainCollectionId, id);
 	await updateDoc(docRef, {
 		name: trimedName
+	});
+}
+
+export async function updateMainCollectionOrder(id, newOrder) {
+	const docRef = doc(db, mainCollectionId, id);
+	await updateDoc(docRef, {
+		order: newOrder
 	});
 }
 
