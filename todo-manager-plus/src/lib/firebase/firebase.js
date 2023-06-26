@@ -179,32 +179,32 @@ export async function leaveMainCollection(id) {
 }
 
 export async function removeShareMainCollection(id, email) {
-    const docRef = doc(db, mainCollectionId, id);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-        const docData = docSnap.data();
-        const oldUids = docData.uids;
-        const newUids = oldUids.filter((uid) => uid !== email);
-        await updateDoc(docRef, {
-            uids: newUids
-        });
-    }
+	const docRef = doc(db, mainCollectionId, id);
+	const docSnap = await getDoc(docRef);
+	if (docSnap.exists()) {
+		const docData = docSnap.data();
+		const oldUids = docData.uids;
+		const newUids = oldUids.filter((uid) => uid !== email);
+		await updateDoc(docRef, {
+			uids: newUids
+		});
+	}
 
-    // update sub collection docs also
-    const subCollectionSnapshot = await getSubCollectionSnapshot(id);
-    if (!subCollectionSnapshot.empty) {
-        const subCollectionDocs = subCollectionSnapshot.docs;
-        subCollectionDocs.forEach(async (d) => {
-            const subDocRef = doc(db, mainCollectionId, id, subCollectionId, d.id);
-            const subDocSnap = await getDoc(subDocRef);
-            const subDocData = subDocSnap.data();
-            const oldUids = subDocData.uids;
-            const newUids = oldUids.filter((uid) => uid !== email);
-            updateDoc(subDocRef, {
-                uids: newUids
-            });
-        });
-    }
+	// update sub collection docs also
+	const subCollectionSnapshot = await getSubCollectionSnapshot(id);
+	if (!subCollectionSnapshot.empty) {
+		const subCollectionDocs = subCollectionSnapshot.docs;
+		subCollectionDocs.forEach(async (d) => {
+			const subDocRef = doc(db, mainCollectionId, id, subCollectionId, d.id);
+			const subDocSnap = await getDoc(subDocRef);
+			const subDocData = subDocSnap.data();
+			const oldUids = subDocData.uids;
+			const newUids = oldUids.filter((uid) => uid !== email);
+			updateDoc(subDocRef, {
+				uids: newUids
+			});
+		});
+	}
 }
 
 export async function listenerMainCollection(postMapCallback) {
@@ -221,20 +221,37 @@ export async function listenerMainCollection(postMapCallback) {
 	return unsubscribe;
 }
 
+async function safeToCreateListenerMainCollectionDoc(id) {
+	try {
+		const docRef = doc(db, mainCollectionId, id);
+		const docSnap = await getDoc(docRef);
+		return docSnap.exists();
+	} catch (err) {
+		return false;
+	}
+}
+
 export async function listenerMainCollectionDoc(id, postMapCallback, redirectCallback) {
-	const docRef = doc(db, mainCollectionId, id);
-	const unsubscribe = onSnapshot(docRef, (docSnap) => {
-		if (docSnap.exists()) {
-			const docData = {
-				...docSnap.data(),
-				id: docSnap.id
-			};
-			postMapCallback(docData);
-		} else {
-			redirectCallback();
-		}
-	});
-	return unsubscribe;
+	const safe = await safeToCreateListenerMainCollectionDoc(id);
+	if (safe) {
+		const docRef = doc(db, mainCollectionId, id);
+		const unsubscribe = onSnapshot(docRef, (docSnap) => {
+			if (docSnap.exists()) {
+				const docData = {
+					...docSnap.data(),
+					id: docSnap.id
+				};
+				postMapCallback(docData);
+			} else {
+				redirectCallback();
+				return () => {};
+			}
+		});
+		return unsubscribe;
+	} else {
+		redirectCallback();
+		return () => {};
+	}
 }
 
 function getSubCollectionQuery(id) {

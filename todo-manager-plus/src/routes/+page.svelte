@@ -6,7 +6,7 @@
 		deleteMainCollection,
 		shareMainCollection,
 		leaveMainCollection,
-        removeShareMainCollection,
+		removeShareMainCollection,
 		signInWithGoogle,
 		signOutWithGoogle,
 		currentUserStore
@@ -16,7 +16,7 @@
 
 	import Modal from '$lib/components/Modal.svelte';
 
-    let userEmail = '';
+	let userEmail = '';
 
 	let showSignoutModal = false;
 
@@ -37,9 +37,9 @@
 	let showLeaveListModal = false;
 	let showLeavingListConfirmation = false;
 
-    let showRemoveListModal = false;
-    let removingEmail = '';
-    let showRemovingListConfirmation = false;
+	let showRemoveListModal = false;
+	let removingEmail = '';
+	let showRemovingListConfirmation = false;
 
 	let showWithListModal = false;
 	let emails = [];
@@ -55,7 +55,7 @@
 	async function updateLoginStatus(u) {
 		unsubFromLists();
 		if (u) {
-            userEmail = u.email;
+			userEmail = u.email;
 			unsubFromLists = await listenerMainCollection((arr) => {
 				lists = arr;
 				if (snapshotLoading) snapshotLoading = false;
@@ -97,7 +97,7 @@
 		editingListName = name;
 		showEditListModal = true;
 
-        deletingListConfirmation = false;
+		deletingListConfirmation = false;
 	}
 	function editList() {
 		updateMainCollection(editingListId, editingListName);
@@ -110,7 +110,7 @@
 	}
 
 	function startDeletingList() {
-        deletingListConfirmation = false;
+		deletingListConfirmation = false;
 		showDeleteListModal = true;
 	}
 	function deleteList() {
@@ -160,37 +160,37 @@
 
 		showLeavingListConfirmation = false;
 		showLeaveListModal = false;
-        showWithListModal = false;
+		showWithListModal = false;
 	}
 
-    function startRemovingList(email) {
-        removingEmail = email;
-        showRemoveListModal = true;
-    }
-    async function removeList() {
-        await removeShareMainCollection(sharingListId, removingEmail);
+	function startRemovingList(email) {
+		removingEmail = email;
+		showRemoveListModal = true;
+	}
+	async function removeList() {
+		await removeShareMainCollection(sharingListId, removingEmail);
 
-        removingEmail = '';
-        updateEmails();
+		removingEmail = '';
+		updateEmails();
 
-        showRemoveListModal = false;
-    }
+		showRemoveListModal = false;
+	}
 
-    function updateEmails() {
-        emails = lists.find((list) => list.id === sharingListId).uids;
+	function updateEmails() {
+		emails = lists.find((list) => list.id === sharingListId).uids;
 
-        // sort userEmail to the top
-        const index = emails.indexOf(userEmail);
-        if (index > -1) {
-            emails.splice(index, 1);
-            emails.unshift(userEmail);
-        }
-    }
+		// sort userEmail to the top
+		const index = emails.indexOf(userEmail);
+		if (index > -1) {
+			emails.splice(index, 1);
+			emails.unshift(userEmail);
+		}
+	}
 
 	function startShowingWithList() {
-        updateEmails();
+		updateEmails();
 
-        showRemovingListConfirmation = false;
+		showRemovingListConfirmation = false;
 		showWithListModal = true;
 	}
 
@@ -334,7 +334,7 @@
 						placeholder="List name"
 						required
 						autocomplete="off"
-                        spellcheck="true"
+						spellcheck="true"
 						bind:value={createListText}
 					/>
 					<!-- floatRight just makes it float to get the margins/padding correct -->
@@ -354,7 +354,7 @@
 						placeholder="List name"
 						required
 						autocomplete="off"
-                        spellcheck="true"
+						spellcheck="true"
 						bind:value={editingListName}
 					/>
 					<input class="eightyWidth floatLeft" type="submit" value="Update" />
@@ -455,7 +455,7 @@
 			</article>
 		</Modal>
 
-        <Modal bind:showModal={showRemoveListModal}>
+		<Modal bind:showModal={showRemoveListModal}>
 			<article class="zeroBottomPadding smallArticleTopPadding">
 				<form method="POST" on:submit|preventDefault|stopPropagation={removeList}>
 					<h1 class="zeroBottomMargin">
@@ -463,8 +463,8 @@
 					</h1>
 
 					<label for="removeList">
-						Removing someone from a list will mean they will no longer be able to access it. Are you
-                        sure you want to remove this user from the list?
+						Removing someone from a list will mean they will no longer be able to access
+						it. Are you sure you want to remove this user from the list?
 						<input
 							type="checkbox"
 							role="switch"
@@ -488,38 +488,38 @@
 			<article class="overflowScroll">
 				<h1 class="zeroBottomMargin">Shared with</h1>
 
-                <table>
-                    <thead>
-                        <tr>
-                            <th><strong>Email</strong></th>
-                            <th />
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {#each emails as email (email)}
-                            <tr>
-                                <td class="modifiedTd breakWord">{email}</td>
-                                <td class="modifiedTd zeroWidth zeroWidthPadding">
-                                    {#if email == userEmail}
-                                        <kbd
-                                            class="floatRight"
-                                            on:click|stopPropagation={startLeavingList}
-                                            on:keydown|stopPropagation={startLeavingList}
-                                            style="cursor: pointer;">Leave</kbd
-                                        >
-                                    {:else}
-                                        <kbd
-                                            class="floatRight"
-                                            on:click|stopPropagation={startRemovingList(email)}
-                                            on:keydown|stopPropagation={startRemovingList(email)}
-                                            style="cursor: pointer;">Remove</kbd
-                                        >
-                                    {/if}
-                                </td>
-                            </tr>
-                        {/each}
-                    </tbody>
-                </table>
+				<table>
+					<thead>
+						<tr>
+							<th><strong>Email</strong></th>
+							<th />
+						</tr>
+					</thead>
+					<tbody>
+						{#each emails as email (email)}
+							<tr>
+								<td class="modifiedTd breakWord">{email}</td>
+								<td class="modifiedTd zeroWidth zeroWidthPadding">
+									{#if email == userEmail}
+										<kbd
+											class="floatRight"
+											on:click|stopPropagation={startLeavingList}
+											on:keydown|stopPropagation={startLeavingList}
+											style="cursor: pointer;">Leave</kbd
+										>
+									{:else}
+										<kbd
+											class="floatRight"
+											on:click|stopPropagation={startRemovingList(email)}
+											on:keydown|stopPropagation={startRemovingList(email)}
+											style="cursor: pointer;">Remove</kbd
+										>
+									{/if}
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
 			</article>
 		</Modal>
 

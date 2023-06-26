@@ -12,8 +12,8 @@
 		listenerMainCollectionDoc,
 		shareMainCollection,
 		leaveMainCollection,
-        removeShareMainCollection,
-        updateMainCollection,
+		removeShareMainCollection,
+		updateMainCollection,
 		deleteMainCollection
 	} from '$lib/firebase/firebase';
 	import { onDestroy, onMount } from 'svelte';
@@ -21,7 +21,7 @@
 
 	import Modal from '$lib/components/Modal.svelte';
 
-    let userEmail = '';
+	let userEmail = '';
 
 	let showSignoutModal = false;
 
@@ -43,13 +43,13 @@
 	let showLeaveListModal = false;
 	let showLeavingListConfirmation = false;
 
-    let showRemoveListModal = false;
-    let removingEmail = '';
-    let showRemovingListConfirmation = false;
+	let showRemoveListModal = false;
+	let removingEmail = '';
+	let showRemovingListConfirmation = false;
 
 	let showWithListModal = false;
 
-    let showEditListModal = false;
+	let showEditListModal = false;
 	let editingListId = '';
 	let editingListName = '';
 
@@ -67,10 +67,11 @@
 	let timeoutId;
 	async function updateLoginStatus(u) {
 		if (u) {
-            userEmail = u.email;
+			userEmail = u.email;
 			if (timeoutId) clearTimeout(timeoutId);
 			if (!loaded) {
 				try {
+					// not sure if this does anything...
 					unsubFromDoc = await listenerMainCollectionDoc(
 						data.listId,
 						async (docData) => {
@@ -183,28 +184,28 @@
 		backToHome();
 	}
 
-    function startRemovingList(email) {
-        removingEmail = email;
-        showRemoveListModal = true;
-    }
-    async function removeList() {
-        removeShareMainCollection(sharingListId, removingEmail);
+	function startRemovingList(email) {
+		removingEmail = email;
+		showRemoveListModal = true;
+	}
+	async function removeList() {
+		removeShareMainCollection(sharingListId, removingEmail);
 
-        removingEmail = '';
-        showRemoveListModal = false;
-    }
+		removingEmail = '';
+		showRemoveListModal = false;
+	}
 
 	function startShowingWithList() {
-        showRemovingListConfirmation = false;
+		showRemovingListConfirmation = false;
 		showWithListModal = true;
 	}
 
-    function startEditingList(id, name) {
+	function startEditingList(id, name) {
 		editingListId = id;
 		editingListName = name;
 		showEditListModal = true;
 
-        deletingListConfirmation = false;
+		deletingListConfirmation = false;
 	}
 	function editList() {
 		updateMainCollection(editingListId, editingListName);
@@ -217,12 +218,12 @@
 	}
 
 	function startDeletingList() {
-        deletingListConfirmation = false;
+		deletingListConfirmation = false;
 		showDeleteListModal = true;
 	}
 	function deleteList() {
 		deleteMainCollection(editingListId);
-        backToHome();
+		backToHome();
 	}
 
 	function signOutAndBackToHome() {
@@ -265,7 +266,7 @@
 
 		{#if !loaded}
 			<kbd class="floatRight clearBoth" style="cursor: pointer;">Share list</kbd>
-            <kbd class="floatRight clearBoth" style="cursor: pointer;">Edit list</kbd>
+			<kbd class="floatRight clearBoth" style="cursor: pointer;">Edit list</kbd>
 
 			<h1>Loading...</h1>
 			<h2>Created on loading...</h2>
@@ -276,7 +277,7 @@
 				class="floatRight clearBoth"
 				style="cursor: pointer;">Share list</kbd
 			>
-            <kbd
+			<kbd
 				on:click={startEditingList(data.listId, data.name)}
 				on:keydown={startEditingList(data.listId, data.name)}
 				class="floatRight clearBoth"
@@ -384,7 +385,7 @@
 						placeholder="Todo item name"
 						required
 						autocomplete="off"
-                        spellcheck="true"
+						spellcheck="true"
 						bind:value={createTodoText}
 					/>
 					<input class="floatRight" type="submit" value="Create" />
@@ -403,7 +404,7 @@
 						placeholder="Todo item name"
 						required
 						autocomplete="off"
-                        spellcheck="true"
+						spellcheck="true"
 						bind:value={editingTodoName}
 					/>
 					<input class="floatRight" type="submit" value="Update" />
@@ -496,7 +497,7 @@
 			</article>
 		</Modal>
 
-        <Modal bind:showModal={showRemoveListModal}>
+		<Modal bind:showModal={showRemoveListModal}>
 			<article class="zeroBottomPadding smallArticleTopPadding">
 				<form method="POST" on:submit|preventDefault|stopPropagation={removeList}>
 					<h1 class="zeroBottomMargin">
@@ -504,8 +505,8 @@
 					</h1>
 
 					<label for="removeList">
-						Removing someone from a list will mean they will no longer be able to access it. Are you
-                        sure you want to remove this user from the list?
+						Removing someone from a list will mean they will no longer be able to access
+						it. Are you sure you want to remove this user from the list?
 						<input
 							type="checkbox"
 							role="switch"
@@ -529,42 +530,42 @@
 			<article class="overflowScroll">
 				<h1 class="zeroBottomMargin">Shared with</h1>
 
-                <table>
-                    <thead>
-                        <tr>
-                            <th><strong>Email</strong></th>
-                            <th />
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {#each data.uids as email (email)}
-                            <tr>
-                                <td class="modifiedTd breakWord">{email}</td>
-                                <td class="modifiedTd zeroWidth zeroWidthPadding">
-                                    {#if email == userEmail}
-                                        <kbd
-                                            class="floatRight"
-                                            on:click|stopPropagation={startLeavingList}
-                                            on:keydown|stopPropagation={startLeavingList}
-                                            style="cursor: pointer;">Leave</kbd
-                                        >
-                                    {:else}
-                                        <kbd
-                                            class="floatRight"
-                                            on:click|stopPropagation={startRemovingList(email)}
-                                            on:keydown|stopPropagation={startRemovingList(email)}
-                                            style="cursor: pointer;">Remove</kbd
-                                        >
-                                    {/if}
-                                </td>
-                            </tr>
-                        {/each}
-                    </tbody>
-                </table>
+				<table>
+					<thead>
+						<tr>
+							<th><strong>Email</strong></th>
+							<th />
+						</tr>
+					</thead>
+					<tbody>
+						{#each data.uids as email (email)}
+							<tr>
+								<td class="modifiedTd breakWord">{email}</td>
+								<td class="modifiedTd zeroWidth zeroWidthPadding">
+									{#if email == userEmail}
+										<kbd
+											class="floatRight"
+											on:click|stopPropagation={startLeavingList}
+											on:keydown|stopPropagation={startLeavingList}
+											style="cursor: pointer;">Leave</kbd
+										>
+									{:else}
+										<kbd
+											class="floatRight"
+											on:click|stopPropagation={startRemovingList(email)}
+											on:keydown|stopPropagation={startRemovingList(email)}
+											style="cursor: pointer;">Remove</kbd
+										>
+									{/if}
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
 			</article>
 		</Modal>
 
-        <Modal bind:showModal={showEditListModal}>
+		<Modal bind:showModal={showEditListModal}>
 			<article class="zeroBottomPadding smallArticleTopPadding">
 				<form method="POST" on:submit|preventDefault={editList}>
 					<h1 class="zeroBottomMargin"><label for="editList">Update list</label></h1>
@@ -575,7 +576,7 @@
 						placeholder="List name"
 						required
 						autocomplete="off"
-                        spellcheck="true"
+						spellcheck="true"
 						bind:value={editingListName}
 					/>
 					<input class="eightyWidth floatLeft" type="submit" value="Update" />
@@ -615,7 +616,6 @@
 				</form>
 			</article>
 		</Modal>
-
 
 		{#if $currentUserStore != null}
 			<Modal bind:showModal={showSignoutModal}>
