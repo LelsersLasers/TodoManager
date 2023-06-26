@@ -58,6 +58,8 @@
 
 	let snapshotLoading = true;
 
+	let editingOrder = false;
+
 	let todos = [];
 	let unsubFromTodos = () => {};
 	let unsubFromDoc = () => {};
@@ -226,6 +228,11 @@
 		backToHome();
 	}
 
+	function moveTodoUp(id) {
+
+    }
+	function moveTodoDown(id) {}
+
 	function signOutAndBackToHome() {
 		signOutWithGoogle();
 		backToHome();
@@ -298,10 +305,28 @@
 		<article class="zeroTopMargin" aria-busy="true" />
 	{:else}
 		{#if todos.length > 0}
+			{#if !editingOrder}
+				<kbd
+					on:click={() => (editingOrder = true)}
+					on:keydown={() => (editingOrder = true)}
+					class="floatRight clearBoth"
+					style="cursor: pointer;">Edit Order</kbd
+				>
+			{:else}
+				<kbd
+					on:click={() => (editingOrder = false)}
+					on:keydown={() => (editingOrder = false)}
+					class="floatRight clearBoth"
+					style="cursor: pointer;">Save Order</kbd
+				>
+			{/if}
 			<h4 class="zeroBottomMargin">Todos:</h4>
 			<table class="threeEmBottomMargin">
 				<thead>
 					<tr>
+						{#if editingOrder}
+							<th class="zeroWidth zeroWidthPadding"><strong>Order</strong></th>
+						{/if}
 						<th><strong>Name</strong></th>
 						<th class="zeroWidth zeroWidthPadding"><strong>Done</strong></th>
 						<th />
@@ -309,8 +334,22 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each todos as todo (todo.id)}
+					{#each todos as todo, index (todo.id)}
 						<tr>
+							{#if editingOrder}
+								<td class="zeroWidth zeroWidthPadding">
+                                    {#if (todos[index - 1]) && (todos[index - 1].finished == todo.finished)}
+                                        <button on:click={moveTodoUp(todo.id)} class="tiny tinyMargin">
+                                            &uarr;
+                                        </button>
+                                    {/if}
+                                    {#if (todos[index + 1]) && (todos[index + 1].finished == todo.finished)}
+                                        <button on:click={moveTodoDown(todo.id)} class="tiny">
+                                            &darr;
+                                        </button>
+                                    {/if}
+								</td>
+							{/if}
 							<td class="breakWord">
 								{#if todo.finished}
 									<del>{todo.name}</del>
