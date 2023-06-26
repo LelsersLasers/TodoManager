@@ -63,6 +63,11 @@
 	float: right;
 }
 
+.clearBoth {
+	clear: both;
+    margin-top: 0.4em;
+}
+
 .breakWord {
 	word-break: break-word;
 }

@@ -223,6 +223,23 @@ export async function listenerMainCollection(postMapCallback) {
 	return unsubscribe;
 }
 
+export async function listenerMainCollectionDoc(id, postMapCallback) {
+    const docRef = doc(db, mainCollectionId, id);
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+            const docData = {
+                ...docSnap.data(),
+                id: docSnap.id
+            };
+            postMapCallback(docData);
+        } else {
+            throw redirect(302, '/');
+        }
+    });
+    return unsubscribe;
+}
+
+
 function getSubCollectionQuery(id) {
 	const subCollection = collection(db, mainCollectionId, id, subCollectionId);
 	const subCollectionQuery = query(

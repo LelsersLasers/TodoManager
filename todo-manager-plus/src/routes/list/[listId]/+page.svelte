@@ -9,7 +9,9 @@
 		deleteSubCollection,
 		signOutWithGoogle,
 		currentUserStore,
-		getMainCollectionDoc
+		getMainCollectionDoc,
+        shareMainCollection,
+        leaveMainCollection,
 	} from '$lib/firebase/firebase';
 	import { onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -27,6 +29,17 @@
 	let showDeleteTodoModal = false;
 	let deletingTodoId = '';
 	let deletingTodoConfirmation = false;
+    
+	let showShareListModal = false;
+	let sharingListId = '';
+	let sharingEmail = '';
+	let shareMessage = 'Email address';
+
+    let showLeaveListModal = false;
+	let showLeavingListConfirmation = false;
+
+	let showWithListModal = false;
+	let emails = [];
 
 	let snapshotLoading = true;
 
@@ -48,6 +61,7 @@
 			count: listData.count,
 			name: listData.name,
 			id: listData.id,
+            uids: listData.uids,
 			createdOn
 		};
 
@@ -120,6 +134,52 @@
 		showDeleteTodoModal = false;
 	}
 
+    function startSharingList(id) {
+		sharingListId = id;
+		sharingEmail = '';
+		showShareListModal = true;
+		shareMessage = 'Email address';
+
+		showLeavingListConfirmation = false;
+	}
+	function shareList() {
+		sharingEmail = sharingEmail.trim();
+		if (sharingEmail.length === 0) return;
+
+		shareMainCollection(sharingListId, sharingEmail)
+			.then(() => {
+				shareMessage = `Shared list with ${sharingEmail}`;
+			})
+			.catch((err) => {
+				shareMessage = `${err.data.message}`;
+			})
+			.finally(() => {
+				sharingEmail = '';
+			});
+	}
+
+    function startLeavingList() {
+		showLeaveListModal = true;
+	}
+	function leaveList() {
+		leaveMainCollection(sharingListId);
+
+		sharingListId = '';
+		sharingEmail = '';
+		showShareListModal = false;
+
+		showLeavingListConfirmation = false;
+		showLeaveListModal = false;
+
+        backToHome();
+	}
+
+	function startShowingWithList() {
+		emails = data.uids;
+
+		showWithListModal = true;
+	}
+
 	function signOutAndBackToHome() {
 		signOutWithGoogle();
 		backToHome();
@@ -136,7 +196,7 @@
 			<img
 				class="floatRight"
 				src={$currentUserStore.photoURL}
-				alt=""
+				alt="?"
 				title="Signed in as {$currentUserStore.displayName}. Click to sign out."
 				on:click={() => (showSignoutModal = true)}
 				on:keydown={() => (showSignoutModal = true)}
@@ -149,11 +209,21 @@
 				alt=""
 			/>
 		{/if}
+
 		{#if !loaded}
+			<kbd class="floatRight clearBoth" style="cursor: pointer;">Share list</kbd>
+
 			<h1>Loading...</h1>
 			<h2>Created on loading...</h2>
 		{:else}
-			<h1>{data.name}</h1>
+        <kbd
+        on:click|stopPropagation={startSharingList(data.listId)}
+        on:keydown|stopPropagation={startSharingList(data.listId)}
+        class="floatRight clearBoth"
+        style="cursor: pointer;">Share list</kbd
+    >
+
+			<h1 class="breakWord">{data.name}</h1>
 			<h2>Created on {data.createdOn}</h2>
 		{/if}
 	</hgroup>
@@ -299,6 +369,76 @@
 						disabled={!deletingTodoConfirmation}
 					/>
 				</form>
+			</article>
+		</Modal>
+
+        <Modal bind:showModal={showShareListModal}>
+			<article class="zeroBottomPadding">
+				<form method="POST" on:submit|preventDefault={shareList}>
+					<h1 class="zeroBottomMargin"><label for="shareList">Share list</label></h1>
+					<input
+						type="text"
+						id="shareList"
+						name="shareList"
+						placeholder={shareMessage}
+						required
+						autocomplete="on"
+						bind:value={sharingEmail}
+					/>
+
+					<input class="halfEmBottomMargin" type="submit" value="Share" />
+					<input
+						class="fiftyWidthWithSpace floatLeft zeroPadding"
+						type="reset"
+						value="Shared with"
+						on:click|preventDefault={startShowingWithList}
+					/>
+					<input
+						class="fiftyWidthWithSpace floatRight zeroPadding"
+						type="reset"
+						value="Leave"
+						on:click|preventDefault={startLeavingList}
+					/>
+				</form>
+			</article>
+		</Modal>
+
+		<Modal bind:showModal={showLeaveListModal}>
+			<article class="zeroBottomPadding">
+				<form method="POST" on:submit|preventDefault|stopPropagation={leaveList}>
+					<h1 class="zeroBottomMargin">
+						<label for="leaveList">Leave list</label>
+					</h1>
+
+					<label for="leaveList">
+						Leaving a list will mean you will no longer be able to access it. Are you
+						sure you want to leave this list?
+						<input
+							type="checkbox"
+							role="switch"
+							id="leaveList"
+							name="leaveList"
+							bind:checked={showLeavingListConfirmation}
+						/>
+					</label>
+
+					<input
+						class="floatRight"
+						type="submit"
+						value="Leave"
+						disabled={!showLeavingListConfirmation}
+					/>
+				</form>
+			</article>
+		</Modal>
+
+		<Modal bind:showModal={showWithListModal}>
+			<article class="overflowScroll">
+				<h1 class="zeroBottomMargin">Shared with</h1>
+
+				{#each emails as email (email)}
+					<li>{email}</li>
+				{/each}
 			</article>
 		</Modal>
 
