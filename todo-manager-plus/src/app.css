@@ -82,6 +82,15 @@
 	width: 90vw;
 }
 
+.modifiedTd {
+    padding: calc(var(--spacing)/ 8) var(--spacing);
+}
+
+input[type="checkbox"] {
+    width: 1.5em;
+    height: 1.5em;
+}
+
 img {
 	border-radius: 50%;
 	height: 2em;

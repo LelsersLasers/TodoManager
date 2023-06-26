@@ -178,6 +178,35 @@ export async function leaveMainCollection(id) {
 	}
 }
 
+export async function removeShareMainCollection(id, email) {
+    const docRef = doc(db, mainCollectionId, id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        const docData = docSnap.data();
+        const oldUids = docData.uids;
+        const newUids = oldUids.filter((uid) => uid !== email);
+        await updateDoc(docRef, {
+            uids: newUids
+        });
+    }
+
+    // update sub collection docs also
+    const subCollectionSnapshot = await getSubCollectionSnapshot(id);
+    if (!subCollectionSnapshot.empty) {
+        const subCollectionDocs = subCollectionSnapshot.docs;
+        subCollectionDocs.forEach(async (d) => {
+            const subDocRef = doc(db, mainCollectionId, id, subCollectionId, d.id);
+            const subDocSnap = await getDoc(subDocRef);
+            const subDocData = subDocSnap.data();
+            const oldUids = subDocData.uids;
+            const newUids = oldUids.filter((uid) => uid !== email);
+            updateDoc(subDocRef, {
+                uids: newUids
+            });
+        });
+    }
+}
+
 export async function listenerMainCollection(postMapCallback) {
 	const mainCollectionQuery = getMainCollectionQuery();
 	const unsubscribe = onSnapshot(mainCollectionQuery, (querySnapshot) => {

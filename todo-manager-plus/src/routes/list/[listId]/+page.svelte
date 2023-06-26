@@ -12,6 +12,7 @@
 		listenerMainCollectionDoc,
 		shareMainCollection,
 		leaveMainCollection,
+        removeShareMainCollection,
         updateMainCollection,
 		deleteMainCollection
 	} from '$lib/firebase/firebase';
@@ -19,6 +20,8 @@
 	import { goto } from '$app/navigation';
 
 	import Modal from '$lib/components/Modal.svelte';
+
+    let userEmail = '';
 
 	let showSignoutModal = false;
 
@@ -40,6 +43,10 @@
 	let showLeaveListModal = false;
 	let showLeavingListConfirmation = false;
 
+    let showRemoveListModal = false;
+    let removingEmail = '';
+    let showRemovingListConfirmation = false;
+
 	let showWithListModal = false;
 
     let showEditListModal = false;
@@ -60,6 +67,7 @@
 	let timeoutId;
 	async function updateLoginStatus(u) {
 		if (u) {
+            userEmail = u.email;
 			if (timeoutId) clearTimeout(timeoutId);
 			if (!loaded) {
 				try {
@@ -175,7 +183,19 @@
 		backToHome();
 	}
 
+    function startRemovingList(email) {
+        removingEmail = email;
+        showRemoveListModal = true;
+    }
+    async function removeList() {
+        removeShareMainCollection(sharingListId, removingEmail);
+
+        removingEmail = '';
+        showRemoveListModal = false;
+    }
+
 	function startShowingWithList() {
+        showRemovingListConfirmation = false;
 		showWithListModal = true;
 	}
 
@@ -474,13 +494,71 @@
 			</article>
 		</Modal>
 
+        <Modal bind:showModal={showRemoveListModal}>
+			<article class="zeroBottomPadding">
+				<form method="POST" on:submit|preventDefault|stopPropagation={removeList}>
+					<h1 class="zeroBottomMargin">
+						<label for="removeList">Remove user</label>
+					</h1>
+
+					<label for="removeList">
+						Removing someone from a list will mean they will no longer be able to access it. Are you
+                        sure you want to remove this user from the list?
+						<input
+							type="checkbox"
+							role="switch"
+							id="removeList"
+							name="removeList"
+							bind:checked={showRemovingListConfirmation}
+						/>
+					</label>
+
+					<input
+						class="floatRight"
+						type="submit"
+						value="Remove"
+						disabled={!showRemovingListConfirmation}
+					/>
+				</form>
+			</article>
+		</Modal>
+
 		<Modal bind:showModal={showWithListModal}>
 			<article class="overflowScroll">
 				<h1 class="zeroBottomMargin">Shared with</h1>
 
-				{#each data.uids as email (email)}
-					<li>{email}</li>
-				{/each}
+                <table>
+                    <thead>
+                        <tr>
+                            <th><strong>Email</strong></th>
+                            <th />
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {#each data.uids as email (email)}
+                            <tr>
+                                <td class="modifiedTd breakWord">{email}</td>
+                                <td class="modifiedTd zeroWidth zeroWidthPadding">
+                                    {#if email == userEmail}
+                                        <kbd
+                                            class="floatRight"
+                                            on:click|stopPropagation={startLeavingList}
+                                            on:keydown|stopPropagation={startLeavingList}
+                                            style="cursor: pointer;">Leave</kbd
+                                        >
+                                    {:else}
+                                        <kbd
+                                            class="floatRight"
+                                            on:click|stopPropagation={startRemovingList(email)}
+                                            on:keydown|stopPropagation={startRemovingList(email)}
+                                            style="cursor: pointer;">Remove</kbd
+                                        >
+                                    {/if}
+                                </td>
+                            </tr>
+                        {/each}
+                    </tbody>
+                </table>
 			</article>
 		</Modal>
 
