@@ -1,4 +1,6 @@
 <script>
+	export let data;
+
 	import {
 		listenerMainCollection,
 		createMainCollection,
@@ -63,6 +65,9 @@
 				lists = arr;
 				if (snapshotLoading) snapshotLoading = false;
 			});
+			if (data.shareListId) {
+				redirectToList(data.shareListId);
+			}
 		} else {
 			lists = [];
 			unsubFromLists = () => {};
@@ -319,6 +324,11 @@
 				<kbd on:click={signIn} on:keydown={signIn} style="cursor: pointer;">Sign in</kbd
 				> with your Google account to start managing your todos!
 			</p>
+			{#if data.shareListName}
+				<p style="text-align: center;">
+					Upon signing in, you will be redirected to recently shared list: <em>{data.shareListName}</em>
+				</p>
+			{/if}
 		</article>
 
 		<div class="stickyFooter zeroBottomMargin textAlignCenter">
@@ -334,23 +344,23 @@
 		<article class="zeroTopMargin" aria-busy="true" />
 	{:else}
 		{#if lists.length > 0}
-            {#if lists.length > 1}
-                {#if !editingOrder}
-                    <kbd
-                        on:click={() => (editingOrder = true)}
-                        on:keydown={() => (editingOrder = true)}
-                        class="floatRight clearBoth stickyOnScroll"
-                        style="cursor: pointer;">Edit Order</kbd
-                    >
-                {:else}
-                    <kbd
-                        on:click={() => (editingOrder = false)}
-                        on:keydown={() => (editingOrder = false)}
-                        class="floatRight clearBoth stickyOnScroll"
-                        style="cursor: pointer;">Save Order</kbd
-                    >
-                {/if}
-            {/if}
+			{#if lists.length > 1}
+				{#if !editingOrder}
+					<kbd
+						on:click={() => (editingOrder = true)}
+						on:keydown={() => (editingOrder = true)}
+						class="floatRight clearBoth stickyOnScroll"
+						style="cursor: pointer;">Edit Order</kbd
+					>
+				{:else}
+					<kbd
+						on:click={() => (editingOrder = false)}
+						on:keydown={() => (editingOrder = false)}
+						class="floatRight clearBoth stickyOnScroll"
+						style="cursor: pointer;">Save Order</kbd
+					>
+				{/if}
+			{/if}
 			<h4 class="zeroBottomMargin">Todo lists:</h4>
 			<table class="threeEmBottomMargin">
 				<thead>
