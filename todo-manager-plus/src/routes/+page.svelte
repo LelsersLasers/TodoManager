@@ -334,21 +334,23 @@
 		<article class="zeroTopMargin" aria-busy="true" />
 	{:else}
 		{#if lists.length > 0}
-			{#if !editingOrder}
-				<kbd
-					on:click={() => (editingOrder = true)}
-					on:keydown={() => (editingOrder = true)}
-					class="floatRight clearBoth stickyOnScroll"
-					style="cursor: pointer;">Edit Order</kbd
-				>
-			{:else}
-				<kbd
-					on:click={() => (editingOrder = false)}
-					on:keydown={() => (editingOrder = false)}
-					class="floatRight clearBoth stickyOnScroll"
-					style="cursor: pointer;">Save Order</kbd
-				>
-			{/if}
+            {#if lists.length > 1}
+                {#if !editingOrder}
+                    <kbd
+                        on:click={() => (editingOrder = true)}
+                        on:keydown={() => (editingOrder = true)}
+                        class="floatRight clearBoth stickyOnScroll"
+                        style="cursor: pointer;">Edit Order</kbd
+                    >
+                {:else}
+                    <kbd
+                        on:click={() => (editingOrder = false)}
+                        on:keydown={() => (editingOrder = false)}
+                        class="floatRight clearBoth stickyOnScroll"
+                        style="cursor: pointer;">Save Order</kbd
+                    >
+                {/if}
+            {/if}
 			<h4 class="zeroBottomMargin">Todo lists:</h4>
 			<table class="threeEmBottomMargin">
 				<thead>
