@@ -147,8 +147,7 @@
 		shareMessage = 'Email address';
 
 		const searchParams = new URLSearchParams();
-		// const base = "https://todo-manager-plus.vercel.app";
-		const base = 'http://localhost:5173';
+		const base = "https://todo-manager-plus.vercel.app";
 		searchParams.set('sharedListId', sharingListId);
 		searchParams.set(
 			'sharedListName',
