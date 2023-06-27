@@ -3,20 +3,21 @@
 		listenerMainCollection,
 		createMainCollection,
 		updateMainCollection,
+		updateMainCollectionOrder,
 		deleteMainCollection,
 		shareMainCollection,
 		leaveMainCollection,
 		removeShareMainCollection,
 		signInWithGoogle,
 		signOutWithGoogle,
-		currentUserStore
+		listenerOnAuthStateChanged
 	} from '$lib/firebase/firebase';
 	import { onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 
 	import Modal from '$lib/components/Modal.svelte';
 
-	let userEmail = '';
+	let user;
 
 	let showSignoutModal = false;
 
@@ -47,15 +48,17 @@
 	let currentUserLoading = true;
 	let snapshotLoading = true;
 
+	let editingOrder = false;
+
 	let lists = [];
 
 	let unsubFromLists = () => {};
 	let unsubFromUser = () => {};
 
 	async function updateLoginStatus(u) {
+		user = u;
 		unsubFromLists();
 		if (u) {
-			userEmail = u.email;
 			unsubFromLists = await listenerMainCollection((arr) => {
 				lists = arr;
 				if (snapshotLoading) snapshotLoading = false;
@@ -75,7 +78,7 @@
 	}
 
 	onMount(() => {
-		unsubFromUser = currentUserStore.subscribe(updateLoginStatus);
+		unsubFromUser = listenerOnAuthStateChanged(updateLoginStatus);
 	});
 	onDestroy(() => {
 		unsubFromLists();
@@ -179,11 +182,11 @@
 	function updateEmails() {
 		emails = lists.find((list) => list.id === sharingListId).uids;
 
-		// sort userEmail to the top
-		const index = emails.indexOf(userEmail);
+		// sort user.email to the top
+		const index = emails.indexOf(user.email);
 		if (index > -1) {
 			emails.splice(index, 1);
-			emails.unshift(userEmail);
+			emails.unshift(user.email);
 		}
 	}
 
@@ -192,6 +195,77 @@
 
 		showRemovingListConfirmation = false;
 		showWithListModal = true;
+	}
+
+	function noNegativeListOrders(idsToUpdate) {
+		let listOrders = lists.map((l) => l.order);
+		let minListOrder = Math.min(...listOrders);
+		if (minListOrder < 0) {
+			let offset = Math.abs(minListOrder);
+			lists.forEach((l) => {
+				l.order += offset;
+			});
+			idsToUpdate = lists.map((l) => l.id);
+		}
+		return idsToUpdate;
+	}
+
+	function moveListUp(id) {
+		// the following is guaranteed to be true
+		// {#if (lists[index - 1])}
+
+		let idsToUpdate = [];
+
+		let list = lists.find((l) => l.id == id);
+		let index = lists.indexOf(list);
+
+		let aboveList = lists[index - 1];
+		list.order = aboveList.order - 1;
+		index--;
+
+		idsToUpdate.push(list.id);
+
+		while (lists[index - 1]) {
+			lists[index - 1].order = lists[index].order - 2;
+			index--;
+			idsToUpdate.push(lists[index].id);
+		}
+
+		idsToUpdate = noNegativeListOrders(idsToUpdate);
+
+		idsToUpdate.forEach((id) => {
+			const listToUpdate = lists.find((l) => l.id == id);
+			updateMainCollectionOrder(id, listToUpdate.order);
+		});
+	}
+
+	function moveListDown(id) {
+		// the following is guaranteed to be true
+		// {#if (lists[index + 1])}
+
+		let idsToUpdate = [];
+
+		let list = lists.find((l) => l.id == id);
+		let index = lists.indexOf(list);
+
+		let belowList = lists[index + 1];
+		list.order = belowList.order + 1;
+		index++;
+
+		idsToUpdate.push(list.id);
+
+		while (lists[index + 1]) {
+			lists[index + 1].order = lists[index].order + 2;
+			index++;
+			idsToUpdate.push(lists[index].id);
+		}
+
+		idsToUpdate = noNegativeListOrders(idsToUpdate);
+
+		idsToUpdate.forEach((id) => {
+			const listToUpdate = lists.find((l) => l.id == id);
+			updateMainCollectionOrder(id, listToUpdate.order);
+		});
 	}
 
 	function signIn() {
@@ -206,12 +280,12 @@
 
 <header class="zeroBottomPadding">
 	<hgroup>
-		{#if $currentUserStore != null}
+		{#if user}
 			<img
 				class="floatRight"
-				src={$currentUserStore.photoURL}
+				src={user.photoURL}
 				alt="?"
-				title="Signed in as {$currentUserStore.displayName}. Click to sign out."
+				title="Signed in as {user.displayName}. Click to sign out."
 				on:click={() => (showSignoutModal = true)}
 				on:keydown={() => (showSignoutModal = true)}
 				style="cursor: pointer;"
@@ -238,7 +312,7 @@
 	{#if currentUserLoading}
 		<h5>Loading</h5>
 		<article class="zeroTopMargin" aria-busy="true" />
-	{:else if $currentUserStore == null}
+	{:else if !user}
 		<article class="zeroTopMargin">
 			<h2 style="text-align: center;">Sign in to get started!</h2>
 			<p style="text-align: center;">
@@ -260,10 +334,28 @@
 		<article class="zeroTopMargin" aria-busy="true" />
 	{:else}
 		{#if lists.length > 0}
+			{#if !editingOrder}
+				<kbd
+					on:click={() => (editingOrder = true)}
+					on:keydown={() => (editingOrder = true)}
+					class="floatRight clearBoth stickyOnScroll"
+					style="cursor: pointer;">Edit Order</kbd
+				>
+			{:else}
+				<kbd
+					on:click={() => (editingOrder = false)}
+					on:keydown={() => (editingOrder = false)}
+					class="floatRight clearBoth stickyOnScroll"
+					style="cursor: pointer;">Save Order</kbd
+				>
+			{/if}
 			<h4 class="zeroBottomMargin">Todo lists:</h4>
 			<table class="threeEmBottomMargin">
 				<thead>
 					<tr>
+						{#if editingOrder}
+							<th class="zeroWidth zeroWidthPadding"><strong>Order</strong></th>
+						{/if}
 						<th><strong>Name</strong></th>
 						<th class="zeroWidth zeroWidthPadding"><strong>#</strong></th>
 						<th />
@@ -271,12 +363,32 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each lists as list (list.id)}
+					{#each lists as list, index (list.id)}
 						<tr
 							on:click={redirectToList(list.id)}
 							on:keydown={redirectToList(list.id)}
 							style="cursor: pointer;"
 						>
+							{#if editingOrder}
+								<td class="zeroWidth zeroWidthPadding">
+									{#if lists[index - 1]}
+										<button
+											on:click|stopPropagation={moveListUp(list.id)}
+											class="tiny tinyMargin"
+										>
+											&uarr;
+										</button>
+									{/if}
+									{#if lists[index + 1]}
+										<button
+											on:click|stopPropagation={moveListDown(list.id)}
+											class="tiny"
+										>
+											&darr;
+										</button>
+									{/if}
+								</td>
+							{/if}
 							<td class="breakWord">{list.name}</td>
 							<td class="zeroWidth zeroWidthPadding">{list.count}</td>
 							<td class="zeroWidth zeroWidthPadding">
@@ -500,7 +612,7 @@
 							<tr>
 								<td class="modifiedTd breakWord">{email}</td>
 								<td class="modifiedTd zeroWidth zeroWidthPadding">
-									{#if email == userEmail}
+									{#if email == user.email}
 										<kbd
 											class="floatRight"
 											on:click|stopPropagation={startLeavingList}
@@ -527,7 +639,7 @@
 			<article class="zeroBottomPadding">
 				<form method="POST" on:submit|preventDefault={signOutWithGoogle}>
 					<h1 class="zeroBottomMargin">Sign out?</h1>
-					<p>Currently signed in as {$currentUserStore.displayName}</p>
+					<p>Currently signed in as {user.displayName}</p>
 					<br />
 
 					<input type="submit" value="Sign out" />
