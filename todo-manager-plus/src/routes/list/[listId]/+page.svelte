@@ -373,22 +373,22 @@
 	{:else}
 		{#if todos.length > 0}
 			{#if todos.length > 1 && !(todos.length == 2 && todos[0].finished != todos[1].finished)}
-                {#if !editingOrder}
-                    <kbd
-                        on:click={() => (editingOrder = true)}
-                        on:keydown={() => (editingOrder = true)}
-                        class="floatRight clearBoth stickyOnScroll"
-                        style="cursor: pointer;">Edit Order</kbd
-                    >
-                {:else}
-                    <kbd
-                        on:click={() => (editingOrder = false)}
-                        on:keydown={() => (editingOrder = false)}
-                        class="floatRight clearBoth stickyOnScroll"
-                        style="cursor: pointer;">Save Order</kbd
-                    >
-                {/if}
-            {/if}
+				{#if !editingOrder}
+					<kbd
+						on:click={() => (editingOrder = true)}
+						on:keydown={() => (editingOrder = true)}
+						class="floatRight clearBoth stickyOnScroll"
+						style="cursor: pointer;">Edit Order</kbd
+					>
+				{:else}
+					<kbd
+						on:click={() => (editingOrder = false)}
+						on:keydown={() => (editingOrder = false)}
+						class="floatRight clearBoth stickyOnScroll"
+						style="cursor: pointer;">Save Order</kbd
+					>
+				{/if}
+			{/if}
 			<h4 class="zeroBottomMargin">Todos:</h4>
 			<table class="threeEmBottomMargin">
 				<thead>

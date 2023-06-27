@@ -326,7 +326,9 @@
 			</p>
 			{#if data.shareListName}
 				<p style="text-align: center;">
-					Upon signing in, you will be redirected to recently shared list: <em>{data.shareListName}</em>
+					Upon signing in, you will be redirected to recently shared list: <em
+						>{data.shareListName}</em
+					>
 				</p>
 			{/if}
 		</article>
