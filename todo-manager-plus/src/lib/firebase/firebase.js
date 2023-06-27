@@ -56,17 +56,44 @@ export async function signOutWithGoogle() {
 	await signOut(auth);
 }
 
+`
+db format:
+
+lists: 
+	- auto id
+	- name
+	- timestamp (sorted by this - 2)
+	- count (number of todos)
+    - order (sorted by this - 1)
+    - uids (array of emails)
+	- todos:
+		- auto id
+		- name
+		- timestamp (sorted by this - 3)
+		- finished (sorted by this - desc - 2)
+        - order (sorted by this - 1)
+        - uids (array of emails)
+`;
+
 const db = getFirestore(app);
 
 const mainCollectionId = 'lists';
 const mainCollection = collection(db, mainCollectionId);
-const mainCollectionQueryParams = [orderBy('order'), orderBy('timestamp', 'desc')];
+const mainCollectionQueryParams = [
+	orderBy('order'),
+	orderBy('timestamp', 'desc'),
+	// these are just to make sure the data contains these fields
+	orderBy('count'),
+	orderBy('name')
+];
 
 const subCollectionId = 'todos';
 const subCollectionQueryParams = [
 	orderBy('finished'),
 	orderBy('order'),
-	orderBy('timestamp', 'desc')
+	orderBy('timestamp', 'desc'),
+	// these are just to make sure the data contains these fields
+	orderBy('name')
 ];
 
 function getMainCollectionQuery() {
@@ -367,20 +394,3 @@ export async function listenerSubCollection(id, postMapCallback) {
 	});
 	return unsubscribe;
 }
-
-`
-db format:
-
-lists: 
-	- auto id
-	- name
-	- timestamp (sorted by this)
-	- count (number of todos)
-    - uids (array of emails)
-	- todos:
-		- auto id
-		- name
-		- timestamp (sorted by this - 2)
-		- finished (sorted by this - desc - 1)
-        - uids (array of emails)
-`;
