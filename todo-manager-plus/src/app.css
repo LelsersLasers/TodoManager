@@ -55,6 +55,16 @@
 	padding: 0 !important;
 }
 
+.tiny {
+	padding: 0em !important;
+	margin: 0 auto !important;
+	width: 90% !important;
+}
+
+.tinyMargin {
+	margin-bottom: 0.25em !important;
+}
+
 .threeEmBottomMargin {
 	margin-bottom: 3em;
 }
@@ -100,6 +110,12 @@ img {
 	height: 2em;
 	/* width: 2em; */
 	margin-top: 0.5em;
+}
+
+.stickyOnScroll {
+	position: -webkit-sticky; /* Safari */
+	position: sticky;
+	top: 2.5%;
 }
 
 .stickyFooter {

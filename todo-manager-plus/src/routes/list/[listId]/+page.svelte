@@ -6,9 +6,10 @@
 		createSubCollection,
 		updateSubCollection,
 		updateSubCollectionFinished,
+		updateSubCollectionOrder,
 		deleteSubCollection,
 		signOutWithGoogle,
-		currentUserStore,
+		listenerOnAuthStateChanged,
 		listenerMainCollectionDoc,
 		shareMainCollection,
 		leaveMainCollection,
@@ -21,7 +22,7 @@
 
 	import Modal from '$lib/components/Modal.svelte';
 
-	let userEmail = '';
+	let user;
 
 	let showSignoutModal = false;
 
@@ -58,6 +59,8 @@
 
 	let snapshotLoading = true;
 
+	let editingOrder = false;
+
 	let todos = [];
 	let unsubFromTodos = () => {};
 	let unsubFromDoc = () => {};
@@ -66,8 +69,8 @@
 	let loaded = false;
 	let timeoutId;
 	async function updateLoginStatus(u) {
+		if (!leaving) user = u;
 		if (u) {
-			userEmail = u.email;
 			if (timeoutId) clearTimeout(timeoutId);
 			if (!loaded) {
 				try {
@@ -102,13 +105,13 @@
 					}
 				}
 			}
-		} else {
+		} else if (!leaving) {
 			timeoutId = setTimeout(backToHome, 1000);
 		}
 	}
 
 	onMount(() => {
-		unsubFromUser = currentUserStore.subscribe(updateLoginStatus);
+		unsubFromUser = listenerOnAuthStateChanged(updateLoginStatus);
 	});
 	onDestroy(() => {
 		unsubFromTodos();
@@ -226,12 +229,83 @@
 		backToHome();
 	}
 
+	function noNegativeTodoOrders(idsToUpdate) {
+		let todoOrders = todos.map((t) => t.order);
+		let minTodoOrder = Math.min(...todoOrders);
+		if (minTodoOrder < 0) {
+			let offset = Math.abs(minTodoOrder);
+			todos.forEach((t) => {
+				t.order += offset;
+			});
+			idsToUpdate = todos.map((t) => t.id);
+		}
+		return idsToUpdate;
+	}
+
+	function moveTodoUp(id) {
+		// the following is guaranteed to be true
+		// {#if (todos[index - 1]) && (todos[index - 1].finished == todo.finished)}
+		let idsToUpdate = [];
+
+		let todo = todos.find((t) => t.id == id);
+		let index = todos.indexOf(todo);
+
+		let aboveTodo = todos[index - 1];
+		todo.order = aboveTodo.order - 1;
+		index--;
+
+		idsToUpdate.push(todo.id);
+
+		while (todos[index - 1] && todos[index - 1].finished == todo.finished) {
+			todos[index - 1].order = todos[index].order - 2;
+			index--;
+			idsToUpdate.push(todos[index].id);
+		}
+
+		idsToUpdate = noNegativeTodoOrders(idsToUpdate);
+
+		idsToUpdate.forEach((id) => {
+			const todoToUpdate = todos.find((t) => t.id == id);
+			updateSubCollectionOrder(data.id, id, todoToUpdate.order);
+		});
+	}
+	function moveTodoDown(id) {
+		// the following is guaranteed to be true
+		// {#if (todos[index + 1]) && (todos[index + 1].finished == todo.finished)}
+
+		let idsToUpdate = [];
+
+		let todo = todos.find((t) => t.id == id);
+		let index = todos.indexOf(todo);
+
+		let belowTodo = todos[index + 1];
+		todo.order = belowTodo.order + 1;
+		index++;
+
+		idsToUpdate.push(todo.id);
+
+		while (todos[index + 1] && todos[index + 1].finished == todo.finished) {
+			todos[index + 1].order = todos[index].order + 2;
+			index++;
+			idsToUpdate.push(todos[index].id);
+		}
+
+		idsToUpdate = noNegativeTodoOrders(idsToUpdate);
+
+		idsToUpdate.forEach((id) => {
+			updateSubCollectionOrder(data.id, id, todos.find((t) => t.id == id).order);
+		});
+	}
+
+	let leaving = false;
 	function signOutAndBackToHome() {
+		leaving = true;
 		signOutWithGoogle();
 		backToHome();
 	}
 
 	function backToHome() {
+		leaving = true;
 		goto('/');
 	}
 </script>
@@ -246,12 +320,12 @@
 
 <header class="zeroBottomPadding">
 	<hgroup class="threeEmBottomMargin">
-		{#if $currentUserStore != null}
+		{#if user}
 			<img
 				class="floatRight"
-				src={$currentUserStore.photoURL}
+				src={user.photoURL}
 				alt="?"
-				title="Signed in as {$currentUserStore.displayName}. Click to sign out."
+				title="Signed in as {user.displayName}. Click to sign out."
 				on:click={() => (showSignoutModal = true)}
 				on:keydown={() => (showSignoutModal = true)}
 				style="cursor: pointer;"
@@ -298,10 +372,28 @@
 		<article class="zeroTopMargin" aria-busy="true" />
 	{:else}
 		{#if todos.length > 0}
+			{#if !editingOrder}
+				<kbd
+					on:click={() => (editingOrder = true)}
+					on:keydown={() => (editingOrder = true)}
+					class="floatRight clearBoth stickyOnScroll"
+					style="cursor: pointer;">Edit Order</kbd
+				>
+			{:else}
+				<kbd
+					on:click={() => (editingOrder = false)}
+					on:keydown={() => (editingOrder = false)}
+					class="floatRight clearBoth stickyOnScroll"
+					style="cursor: pointer;">Save Order</kbd
+				>
+			{/if}
 			<h4 class="zeroBottomMargin">Todos:</h4>
 			<table class="threeEmBottomMargin">
 				<thead>
 					<tr>
+						{#if editingOrder}
+							<th class="zeroWidth zeroWidthPadding"><strong>Order</strong></th>
+						{/if}
 						<th><strong>Name</strong></th>
 						<th class="zeroWidth zeroWidthPadding"><strong>Done</strong></th>
 						<th />
@@ -309,8 +401,22 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each todos as todo (todo.id)}
+					{#each todos as todo, index (todo.id)}
 						<tr>
+							{#if editingOrder}
+								<td class="zeroWidth zeroWidthPadding">
+									{#if todos[index - 1] && todos[index - 1].finished == todo.finished}
+										<button on:click={moveTodoUp(todo.id)} class="tiny tinyMargin">
+											&uarr;
+										</button>
+									{/if}
+									{#if todos[index + 1] && todos[index + 1].finished == todo.finished}
+										<button on:click={moveTodoDown(todo.id)} class="tiny">
+											&darr;
+										</button>
+									{/if}
+								</td>
+							{/if}
 							<td class="breakWord">
 								{#if todo.finished}
 									<del>{todo.name}</del>
@@ -542,7 +648,7 @@
 							<tr>
 								<td class="modifiedTd breakWord">{email}</td>
 								<td class="modifiedTd zeroWidth zeroWidthPadding">
-									{#if email == userEmail}
+									{#if user && email == user.email}
 										<kbd
 											class="floatRight"
 											on:click|stopPropagation={startLeavingList}
@@ -617,14 +723,14 @@
 			</article>
 		</Modal>
 
-		{#if $currentUserStore != null}
+		{#if user}
 			<Modal bind:showModal={showSignoutModal}>
 				<article class="zeroBottomPadding">
 					<form method="POST" on:submit|preventDefault={signOutAndBackToHome}>
 						<h1 class="zeroBottomMargin">
 							<label for="deleteList">Sign out?</label>
 						</h1>
-						<p>Currently signed in as {$currentUserStore.displayName}</p>
+						<p>Currently signed in as {user.displayName}</p>
 						<br />
 
 						<input type="submit" value="Sign out" />

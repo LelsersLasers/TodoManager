@@ -24,8 +24,6 @@ import {
 	GoogleAuthProvider
 } from 'firebase/auth';
 
-import { writable } from 'svelte/store';
-
 import { fail } from '@sveltejs/kit';
 import { goto } from '$app/navigation';
 
@@ -45,12 +43,10 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-let user = null;
-export const currentUserStore = writable(user);
-onAuthStateChanged(auth, (u) => {
-	user = u;
-	currentUserStore.set(user);
-});
+export function listenerOnAuthStateChanged(callback) {
+	const unsubscribe = onAuthStateChanged(auth, callback);
+	return unsubscribe;
+}
 
 export async function signInWithGoogle() {
 	await signInWithPopup(auth, provider);
@@ -60,20 +56,51 @@ export async function signOutWithGoogle() {
 	await signOut(auth);
 }
 
+`
+db format:
+
+lists: 
+	- auto id
+	- name
+	- timestamp (sorted by this - 2)
+	- count (number of todos)
+    - order (sorted by this - 1)
+    - uids (array of emails)
+	- todos:
+		- auto id
+		- name
+		- timestamp (sorted by this - 3)
+		- finished (sorted by this - desc - 2)
+        - order (sorted by this - 1)
+        - uids (array of emails)
+`;
+
 const db = getFirestore(app);
 
 const mainCollectionId = 'lists';
 const mainCollection = collection(db, mainCollectionId);
-const mainCollectionQueryParams = [orderBy('timestamp', 'desc')];
+const mainCollectionQueryParams = [
+	orderBy('order'),
+	orderBy('timestamp', 'desc'),
+	// these are just to make sure the data contains these fields
+	orderBy('count'),
+	orderBy('name')
+];
 
 const subCollectionId = 'todos';
-const subCollectionQueryParams = [orderBy('finished'), orderBy('timestamp', 'desc')];
+const subCollectionQueryParams = [
+	orderBy('finished'),
+	orderBy('order'),
+	orderBy('timestamp', 'desc'),
+	// these are just to make sure the data contains these fields
+	orderBy('name')
+];
 
 function getMainCollectionQuery() {
 	const mainCollectionQuery = query(
 		mainCollection,
 		...mainCollectionQueryParams,
-		where('uids', 'array-contains', user.email)
+		where('uids', 'array-contains', auth.currentUser.email)
 	);
 	return mainCollectionQuery;
 }
@@ -87,7 +114,8 @@ export async function createMainCollection(name) {
 	const docData = {
 		name: trimedName,
 		count: 0,
-		uids: [user.email],
+		order: 0,
+		uids: [auth.currentUser.email],
 		timestamp: serverTimestamp()
 	};
 	addDoc(mainCollection, docData).then((docRef) => goto(`/list/${docRef.id}`));
@@ -107,9 +135,21 @@ export async function deleteMainCollection(id) {
 }
 
 export async function updateMainCollection(id, newName) {
+	const trimedName = newName.trim();
+	if (!trimedName || trimedName.length == 0) {
+		throw fail(400, { message: 'Name is required' });
+	}
+
 	const docRef = doc(db, mainCollectionId, id);
 	await updateDoc(docRef, {
-		name: newName
+		name: trimedName
+	});
+}
+
+export async function updateMainCollectionOrder(id, newOrder) {
+	const docRef = doc(db, mainCollectionId, id);
+	await updateDoc(docRef, {
+		order: newOrder
 	});
 }
 
@@ -151,7 +191,7 @@ export async function leaveMainCollection(id) {
 	if (docSnap.exists()) {
 		const docData = docSnap.data();
 		const oldUids = docData.uids;
-		const newUids = oldUids.filter((uid) => uid !== user.email);
+		const newUids = oldUids.filter((uid) => uid !== auth.currentUser.email);
 		if (newUids.length === 0) {
 			await deleteMainCollection(id);
 			return;
@@ -170,7 +210,7 @@ export async function leaveMainCollection(id) {
 			const subDocSnap = await getDoc(subDocRef);
 			const subDocData = subDocSnap.data();
 			const oldUids = subDocData.uids;
-			const newUids = oldUids.filter((uid) => uid !== user.email);
+			const newUids = oldUids.filter((uid) => uid !== auth.currentUser.email);
 			updateDoc(subDocRef, {
 				uids: newUids
 			});
@@ -259,7 +299,7 @@ function getSubCollectionQuery(id) {
 	const subCollectionQuery = query(
 		subCollection,
 		...subCollectionQueryParams,
-		where('uids', 'array-contains', user.email)
+		where('uids', 'array-contains', auth.currentUser.email)
 	);
 	return subCollectionQuery;
 }
@@ -279,7 +319,7 @@ export async function createSubCollection(id, name) {
 	const docData = {
 		name: trimedName,
 		finished: false,
-		// uids: [user.email], // Doesn't work, need to get the doc first
+		order: 0,
 		timestamp: serverTimestamp()
 	};
 
@@ -315,9 +355,14 @@ export async function deleteSubCollection(id, subId) {
 }
 
 export async function updateSubCollection(id, subId, newName) {
+	const trimedName = newName.trim();
+	if (!trimedName || trimedName.length == 0) {
+		throw fail(400, { message: 'Name is required' });
+	}
+
 	const docRef = doc(db, mainCollectionId, id, subCollectionId, subId);
 	await updateDoc(docRef, {
-		name: newName
+		name: trimedName
 	});
 }
 
@@ -326,6 +371,13 @@ export async function updateSubCollectionFinished(id, subId, newFinished) {
 	await updateDoc(docRef, {
 		finished: newFinished,
 		timestamp: serverTimestamp()
+	});
+}
+
+export async function updateSubCollectionOrder(id, subId, newOrder) {
+	const docRef = doc(db, mainCollectionId, id, subCollectionId, subId);
+	await updateDoc(docRef, {
+		order: newOrder
 	});
 }
 
@@ -342,20 +394,3 @@ export async function listenerSubCollection(id, postMapCallback) {
 	});
 	return unsubscribe;
 }
-
-`
-db format:
-
-lists: 
-	- auto id
-	- name
-	- timestamp (sorted by this)
-	- count (number of todos)
-    - uids (array of emails)
-	- todos:
-		- auto id
-		- name
-		- timestamp (sorted by this - 2)
-		- finished (sorted by this - desc - 1)
-        - uids (array of emails)
-`;
