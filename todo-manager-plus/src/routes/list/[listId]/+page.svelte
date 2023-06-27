@@ -489,14 +489,14 @@
 		<div class="stickyFooter zeroBottomMargin textAlignCenter">
 			<div class="footerWidth zeroBottomMargin marginZeroAuto nintyFiveWidth">
 				<input
-					class="zeroBottomMargin fifteenWidth floatLeft"
+					class="zeroBottomMargin twentyWidthWithSpace floatLeft"
 					style="cursor: pointer"
 					type="reset"
 					value="&blacktriangleleft;"
 					on:click|preventDefault={backToHome}
 				/>
 				<button
-					class="zeroBottomMargin eightyWidth floatRight"
+					class="zeroBottomMargin eightyWidthWithSpace floatRight"
 					on:click={() => (showCreateTodoModal = true)}>Create new todo</button
 				>
 			</div>
@@ -744,9 +744,9 @@
 						spellcheck="true"
 						bind:value={editingListName}
 					/>
-					<input class="eightyWidth floatLeft" type="submit" value="Update" />
+					<input class="eightyWidthWithSpace floatLeft" type="submit" value="Update" />
 					<input
-						class="fifteenWidth floatRight zeroPadding"
+						class="twentyWidthWithSpace floatRight zeroPadding"
 						type="reset"
 						value="&#128465;"
 						on:click|preventDefault={startDeletingList}

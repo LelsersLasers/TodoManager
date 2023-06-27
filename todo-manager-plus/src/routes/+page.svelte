@@ -507,9 +507,9 @@
 						spellcheck="true"
 						bind:value={editingListName}
 					/>
-					<input class="eightyWidth floatLeft" type="submit" value="Update" />
+					<input class="eightyWidthWithSpace floatLeft" type="submit" value="Update" />
 					<input
-						class="fifteenWidth floatRight zeroPadding"
+						class="twentyWidthWithSpace floatRight zeroPadding"
 						type="reset"
 						value="&#128465;"
 						on:click|preventDefault={startDeletingList}
@@ -593,7 +593,6 @@
 			<article class="largeModal">
 				<h1 class="zeroBottomMargin">Share link</h1>
 
-				<!-- TODO: wording -->
 				<p style="text-align: center">
 					Only people with access (i.e. the list is already shared with them) can open
 					with the link.
