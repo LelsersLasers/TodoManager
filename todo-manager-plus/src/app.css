@@ -14,6 +14,14 @@
 	width: 80% !important;
 }
 
+.eightyWidthWithSpace {
+	width: 78.75% !important;
+}
+
+.twentyWidthWithSpace {
+	width: 18.75% !important;
+}
+
 .fiftyWidthWithSpace {
 	width: 48.75% !important;
 }
@@ -88,8 +96,15 @@
 
 .overflowScroll {
 	overflow-y: scroll;
+}
+
+.largeModal {
 	height: 60vh;
 	width: 90vw;
+}
+
+code {
+	max-width: 100%;
 }
 
 .modifiedTd {

@@ -48,6 +48,9 @@
 	let removingEmail = '';
 	let showRemovingListConfirmation = false;
 
+	let showLinkListModal = false;
+	let shareLink = '';
+
 	let showWithListModal = false;
 
 	let showEditListModal = false;
@@ -155,11 +158,23 @@
 		showDeleteTodoModal = false;
 	}
 
+	let copied = false;
+	function copyText() {
+		navigator.clipboard.writeText(shareLink);
+		copied = true;
+	}
 	function startSharingList(id) {
 		sharingListId = id;
 		sharingEmail = '';
 		showShareListModal = true;
 		shareMessage = 'Email address';
+
+		const searchParams = new URLSearchParams();
+		// const base = "https://todo-manager-plus.vercel.app";
+		const base = 'http://localhost:5173';
+		searchParams.set('sharedListId', sharingListId);
+		searchParams.set('sharedListName', data.name);
+		shareLink = `${base}?${searchParams.toString()}`;
 
 		showLeavingListConfirmation = false;
 	}
@@ -177,6 +192,11 @@
 			.finally(() => {
 				sharingEmail = '';
 			});
+	}
+
+	function startSharingLink() {
+		copied = false;
+		showLinkListModal = true;
 	}
 
 	function startLeavingList() {
@@ -559,7 +579,19 @@
 						bind:value={sharingEmail}
 					/>
 
-					<input class="halfEmBottomMargin" type="submit" value="Share" />
+					<input
+						class="halfEmBottomMargin eightyWidthWithSpace floatLeft"
+						type="submit"
+						value="Share"
+					/>
+					<input
+						class="halfEmBottomMargin twentyWidthWithSpace floatRight zeroPadding"
+						type="reset"
+						value="&#128279;"
+						title="Share link"
+						on:click|preventDefault={startSharingLink}
+					/>
+
 					<input
 						class="fiftyWidthWithSpace floatLeft zeroPadding"
 						type="reset"
@@ -570,9 +602,35 @@
 						class="fiftyWidthWithSpace floatRight zeroPadding"
 						type="reset"
 						value="Leave"
+						title="Leave list"
 						on:click|preventDefault={startLeavingList}
 					/>
 				</form>
+			</article>
+		</Modal>
+
+		<Modal bind:showModal={showLinkListModal}>
+			<article class="largeModal">
+				<h1 class="zeroBottomMargin">Share link</h1>
+
+				<!-- TODO: wording -->
+				<p style="text-align: center">
+					Share the list by email first, then you can link directly to the list with the
+					link below.
+				</p>
+				<p style="text-align: center">
+					Share link:
+					<code id="shareLinkCopy" class="halfEmBottomMargin">{shareLink}</code>
+					<br />
+
+					<kbd on:click={copyText} on:keydown={copyText} style="cursor: pointer;">
+						{#if !copied}
+							Copy
+						{:else}
+							Copied!
+						{/if}
+					</kbd>
+				</p>
 			</article>
 		</Modal>
 
@@ -635,7 +693,7 @@
 		</Modal>
 
 		<Modal bind:showModal={showWithListModal}>
-			<article class="overflowScroll">
+			<article class="overflowScroll largeModal">
 				<h1 class="zeroBottomMargin">Shared with</h1>
 
 				<table>
