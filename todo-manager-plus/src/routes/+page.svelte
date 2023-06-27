@@ -1,4 +1,6 @@
 <script>
+	export let data;
+
 	import {
 		listenerMainCollection,
 		createMainCollection,
@@ -42,6 +44,9 @@
 	let removingEmail = '';
 	let showRemovingListConfirmation = false;
 
+	let showLinkListModal = false;
+	let shareLink = '';
+
 	let showWithListModal = false;
 	let emails = [];
 
@@ -63,6 +68,9 @@
 				lists = arr;
 				if (snapshotLoading) snapshotLoading = false;
 			});
+			if (data.shareListId) {
+				redirectToList(data.shareListId);
+			}
 		} else {
 			lists = [];
 			unsubFromLists = () => {};
@@ -127,11 +135,25 @@
 		showDeleteListModal = false;
 	}
 
+	let copied = false;
+	function copyText() {
+		navigator.clipboard.writeText(shareLink);
+		copied = true;
+	}
 	function startSharingList(id) {
 		sharingListId = id;
 		sharingEmail = '';
 		showShareListModal = true;
 		shareMessage = 'Email address';
+
+		const searchParams = new URLSearchParams();
+		const base = "https://todo-manager-plus.vercel.app";
+		searchParams.set('sharedListId', sharingListId);
+		searchParams.set(
+			'sharedListName',
+			lists.find((list) => list.id === sharingListId).name
+		);
+		shareLink = `${base}?${searchParams.toString()}`;
 
 		showLeavingListConfirmation = false;
 	}
@@ -149,6 +171,11 @@
 			.finally(() => {
 				sharingEmail = '';
 			});
+	}
+
+	function startSharingLink() {
+		copied = false;
+		showLinkListModal = true;
 	}
 
 	function startLeavingList() {
@@ -319,6 +346,14 @@
 				<kbd on:click={signIn} on:keydown={signIn} style="cursor: pointer;">Sign in</kbd
 				> with your Google account to start managing your todos!
 			</p>
+			{#if data.shareListName}
+				<!-- TODO: wording -->
+				<p style="text-align: center;">
+					Upon signing in, you will be redirected to recently shared list: <em
+						>{data.shareListName}</em
+					>
+				</p>
+			{/if}
 		</article>
 
 		<div class="stickyFooter zeroBottomMargin textAlignCenter">
@@ -334,20 +369,22 @@
 		<article class="zeroTopMargin" aria-busy="true" />
 	{:else}
 		{#if lists.length > 0}
-			{#if !editingOrder}
-				<kbd
-					on:click={() => (editingOrder = true)}
-					on:keydown={() => (editingOrder = true)}
-					class="floatRight clearBoth stickyOnScroll"
-					style="cursor: pointer;">Edit Order</kbd
-				>
-			{:else}
-				<kbd
-					on:click={() => (editingOrder = false)}
-					on:keydown={() => (editingOrder = false)}
-					class="floatRight clearBoth stickyOnScroll"
-					style="cursor: pointer;">Save Order</kbd
-				>
+			{#if lists.length > 1}
+				{#if !editingOrder}
+					<kbd
+						on:click={() => (editingOrder = true)}
+						on:keydown={() => (editingOrder = true)}
+						class="floatRight clearBoth stickyOnScroll"
+						style="cursor: pointer;">Edit Order</kbd
+					>
+				{:else}
+					<kbd
+						on:click={() => (editingOrder = false)}
+						on:keydown={() => (editingOrder = false)}
+						class="floatRight clearBoth stickyOnScroll"
+						style="cursor: pointer;">Save Order</kbd
+					>
+				{/if}
 			{/if}
 			<h4 class="zeroBottomMargin">Todo lists:</h4>
 			<table class="threeEmBottomMargin">
@@ -469,9 +506,9 @@
 						spellcheck="true"
 						bind:value={editingListName}
 					/>
-					<input class="eightyWidth floatLeft" type="submit" value="Update" />
+					<input class="eightyWidthWithSpace floatLeft" type="submit" value="Update" />
 					<input
-						class="fifteenWidth floatRight zeroPadding"
+						class="twentyWidthWithSpace floatRight zeroPadding"
 						type="reset"
 						value="&#128465;"
 						on:click|preventDefault={startDeletingList}
@@ -521,7 +558,19 @@
 						bind:value={sharingEmail}
 					/>
 
-					<input class="halfEmBottomMargin" type="submit" value="Share" />
+					<input
+						class="halfEmBottomMargin eightyWidthWithSpace floatLeft"
+						type="submit"
+						value="Share"
+					/>
+					<input
+						class="halfEmBottomMargin twentyWidthWithSpace floatRight zeroPadding"
+						type="reset"
+						value="&#128279;"
+						title="Share link"
+						on:click|preventDefault={startSharingLink}
+					/>
+
 					<input
 						class="fiftyWidthWithSpace floatLeft zeroPadding"
 						type="reset"
@@ -532,9 +581,34 @@
 						class="fiftyWidthWithSpace floatRight zeroPadding"
 						type="reset"
 						value="Leave"
+						title="Leave list"
 						on:click|preventDefault={startLeavingList}
 					/>
 				</form>
+			</article>
+		</Modal>
+
+		<Modal bind:showModal={showLinkListModal}>
+			<article class="largeModal">
+				<h1 class="zeroBottomMargin">Share link</h1>
+
+				<p style="text-align: center">
+					Only people with access (i.e. the list is already shared with them) can open
+					with the link.
+				</p>
+				<p style="text-align: center">
+					Share link:
+					<code id="shareLinkCopy" class="halfEmBottomMargin">{shareLink}</code>
+					<br />
+
+					<kbd on:click={copyText} on:keydown={copyText} style="cursor: pointer;">
+						{#if !copied}
+							Copy
+						{:else}
+							Copied!
+						{/if}
+					</kbd>
+				</p>
 			</article>
 		</Modal>
 
@@ -597,7 +671,7 @@
 		</Modal>
 
 		<Modal bind:showModal={showWithListModal}>
-			<article class="overflowScroll">
+			<article class="overflowScroll largeModal">
 				<h1 class="zeroBottomMargin">Shared with</h1>
 
 				<table>
