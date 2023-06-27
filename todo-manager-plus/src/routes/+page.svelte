@@ -595,8 +595,8 @@
 
 				<!-- TODO: wording -->
 				<p style="text-align: center">
-					Share the list by email first, then you can link directly to the list with the
-					link below.
+					Only people with access (i.e. the list is already shared with them) can open
+					with the link.
 				</p>
 				<p style="text-align: center">
 					Share link:
