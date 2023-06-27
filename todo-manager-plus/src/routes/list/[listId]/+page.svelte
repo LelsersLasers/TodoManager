@@ -610,7 +610,7 @@
 
 		<Modal bind:showModal={showLinkListModal}>
 			<article class="largeModal">
-				<h1 class="zeroBottomMargin">Share link</h1>
+				<h1 class="zeroBottomMargin" style="text-align: center">Share link</h1>
 
 				<p style="text-align: center">
 					Only people with access (i.e. the list is already shared with them) can open
