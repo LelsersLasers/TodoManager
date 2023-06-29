@@ -20,6 +20,7 @@
 
 	import { onDestroy, onMount } from 'svelte';
 	import { writable } from 'svelte/store';
+	import { fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 
 	import Modal from '$lib/components/Modal.svelte';
@@ -443,7 +444,7 @@
 				</thead>
 				<tbody>
 					{#each todos as todo, index (todo.id)}
-						<tr>
+						<tr in:fly={{ duration: 300, x: -200 }} out:fly={{ duration: 300, x: 200 }}>
 							{#if editingOrder}
 								<td class="zeroWidth zeroWidthPadding">
 									{#if todos[index - 1] && todos[index - 1].finished == todo.finished}

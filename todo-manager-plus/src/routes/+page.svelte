@@ -365,7 +365,6 @@
 				> with your Google account to start managing your todos!
 			</p>
 			{#if data.shareListName}
-				<!-- TODO: wording -->
 				<p style="text-align: center;">
 					Upon signing in, you will be redirected to recently shared list: <em
 						>{data.shareListName}</em
