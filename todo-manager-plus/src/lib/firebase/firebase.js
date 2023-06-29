@@ -160,7 +160,8 @@ export async function shareMainCollection(id, email) {
 		const docData = docSnap.data();
 		const oldUids = docData.uids;
 		if (oldUids.includes(email)) {
-			throw fail(400, { message: `Already shared with ${email}` });
+			// throw fail(400, { message: `Already shared with ${email}` });
+			return;
 		}
 		const newUids = [...oldUids, email];
 		await updateDoc(docRef, {
