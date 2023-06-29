@@ -17,12 +17,16 @@
 		updateMainCollection,
 		deleteMainCollection
 	} from '$lib/firebase/firebase';
+
 	import { onDestroy, onMount } from 'svelte';
+	import { writable } from 'svelte/store';
 	import { goto } from '$app/navigation';
 
 	import Modal from '$lib/components/Modal.svelte';
 
 	let user;
+
+	let pageTitle = writable('Todo Manager+: Loading...');
 
 	let showSignoutModal = false;
 
@@ -93,6 +97,8 @@
 							data.id = docData.id;
 							data.uids = docData.uids;
 							data.createdOn = createdOn;
+
+							pageTitle.set(`Todo Manager+: ${data.name}`);
 
 							if (!loaded) {
 								unsubFromTodos = await listenerSubCollection(data.id, (arr) => {
@@ -348,11 +354,7 @@
 </script>
 
 <svelte:head>
-	{#if !loaded}
-		<title>Todo Manager+: Loading...</title>
-	{:else}
-		<title>Todo Manager+: {data.name}</title>
-	{/if}
+	<title>{$pageTitle}</title>
 </svelte:head>
 
 <header class="zeroBottomPadding">
