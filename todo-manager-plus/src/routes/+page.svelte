@@ -97,13 +97,14 @@
 	});
 
 	let createListText = '';
+	let creatingList = false;
 	function createList() {
+		creatingList = true;
 		createListText = createListText.trim();
 		if (createListText.length === 0) return;
 
+		// will redirect to the list
 		createMainCollection(createListText);
-		createListText = '';
-		showCreateListModal = false;
 	}
 
 	function startEditingList(id, name) {
@@ -481,7 +482,11 @@
 		<div class="stickyFooter zeroBottomMargin textAlignCenter">
 			<button
 				class="footerWidth zeroBottomMargin marginZeroAuto nintyFiveWidth"
-				on:click={() => (showCreateListModal = true)}
+				on:click={() => {
+					showCreateListModal = true;
+					createListText = '';
+					creatingList = false;
+				}}
 			>
 				Create new list
 			</button>
@@ -503,8 +508,12 @@
 						spellcheck="true"
 						bind:value={createListText}
 					/>
-					<!-- floatRight just makes it float to get the margins/padding correct -->
-					<input class="floatRight" type="submit" value="Create" />
+					{#if creatingList}
+						<button class="floatRight" aria-busy="true">......</button>
+					{:else}
+						<!-- floatRight just makes it float to get the margins/padding correct -->
+						<input class="floatRight" type="submit" value="Create" />
+					{/if}
 				</form>
 			</article>
 		</Modal>
