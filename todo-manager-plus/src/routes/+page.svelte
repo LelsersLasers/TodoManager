@@ -35,6 +35,9 @@
 	let showShareListModal = false;
 	let sharingListId = '';
 	let sharingEmail = '';
+	let sharingListName = '';
+	let sharingListLoading = false;
+	let shareButtonText = 'Share';
 	let shareMessage = 'Email address';
 
 	let showLeaveListModal = false;
@@ -142,35 +145,49 @@
 	}
 	function startSharingList(id) {
 		sharingListId = id;
+		sharingListName = lists.find((list) => list.id === sharingListId).name;
 		sharingEmail = '';
 		showShareListModal = true;
 		shareMessage = 'Email address';
+		shareButtonText = 'Share';
 
 		const searchParams = new URLSearchParams();
-		const base = "https://todo-manager-plus.vercel.app";
+		const base = 'https://todo-manager-plus.vercel.app';
 		searchParams.set('sharedListId', sharingListId);
-		searchParams.set(
-			'sharedListName',
-			lists.find((list) => list.id === sharingListId).name
-		);
+		searchParams.set('sharedListName', sharingListName);
 		shareLink = `${base}?${searchParams.toString()}`;
 
 		showLeavingListConfirmation = false;
 	}
-	function shareList() {
+	async function shareList() {
 		sharingEmail = sharingEmail.trim();
 		if (sharingEmail.length === 0) return;
 
-		shareMainCollection(sharingListId, sharingEmail)
-			.then(() => {
+		sharingListLoading = true;
+		const response = await fetch('/email/', {
+			method: 'POST',
+			body: JSON.stringify({
+				userEmail: user.email,
+				userName: user.displayName,
+				toEmail: sharingEmail,
+				listName: sharingListName,
+				shareLink: shareLink
+			}),
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
+		const { success } = await response.json();
+		sharingListLoading = false;
+
+		if (success) {
+			shareMainCollection(sharingListId, sharingEmail).then(() => {
 				shareMessage = `Shared list with ${sharingEmail}`;
-			})
-			.catch((err) => {
-				shareMessage = `${err.data.message}`;
-			})
-			.finally(() => {
 				sharingEmail = '';
 			});
+		} else {
+			shareButtonText = 'Not Found';
+		}
 	}
 
 	function startSharingLink() {
@@ -556,13 +573,22 @@
 						required
 						autocomplete="on"
 						bind:value={sharingEmail}
+						on:change={() => (shareButtonText = 'Share')}
 					/>
 
-					<input
-						class="halfEmBottomMargin eightyWidthWithSpace floatLeft"
-						type="submit"
-						value="Share"
-					/>
+					{#if sharingListLoading}
+						<button
+							class="halfEmBottomMargin eightyWidthWithSpace floatLeft"
+							aria-busy="true">.....</button
+						>
+					{:else}
+						<input
+							class="halfEmBottomMargin eightyWidthWithSpace floatLeft"
+							type="submit"
+							value={shareButtonText}
+						/>
+					{/if}
+
 					<input
 						class="halfEmBottomMargin twentyWidthWithSpace floatRight zeroPadding"
 						type="reset"
