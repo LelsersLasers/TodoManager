@@ -566,7 +566,7 @@
 				<form method="POST" on:submit|preventDefault={shareList}>
 					<h1 class="zeroBottomMargin"><label for="shareList">Share list</label></h1>
 					<input
-						type="text"
+						type="email"
 						id="shareList"
 						name="shareList"
 						placeholder={shareMessage}
