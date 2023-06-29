@@ -14,12 +14,12 @@ const transporter = createTransport({
 });
 
 export async function sendEmail(userObj, toEmail, listName, shareLink) {
-	const from = `${userObj.name} (via Todo Manager+) <${EMAILER_EMAIL}>`;
+	const from = `Todo Manager+ <${EMAILER_EMAIL}>`;
 
 	try {
 		{
 			// send email to other user
-			const subject = `Todo list shared with you: '${listName}'`;
+			const subject = `Todo list shared with you: '${listName} (from ${userObj.name})'`;
 			const text = `${userObj.name} (${userObj.email}) has shared a todo list with you. Click on the link to view the list: ${shareLink}`;
 
 			// TODO: improve this html
