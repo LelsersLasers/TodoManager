@@ -40,6 +40,7 @@
 	let sharingListId = '';
 	let sharingEmail = '';
 	let sharingListLoading = false;
+	let shareButtonText = 'Share';
 	let shareMessage = 'Email address';
 
 	let showLeaveListModal = false;
@@ -169,6 +170,7 @@
 		sharingEmail = '';
 		showShareListModal = true;
 		shareMessage = 'Email address';
+		shareButtonText = 'Share';
 
 		const searchParams = new URLSearchParams();
 		const base = 'https://todo-manager-plus.vercel.app';
@@ -205,8 +207,7 @@
 				sharingEmail = '';
 			});
 		} else {
-			// TODO: !
-			// shareMessage = 'Unable to find email';
+			shareButtonText = 'Not Found';
 		}
 	}
 
@@ -593,6 +594,7 @@
 						required
 						autocomplete="on"
 						bind:value={sharingEmail}
+						on:change={() => (shareButtonText = 'Share')}
 					/>
 
 					{#if sharingListLoading}
@@ -604,7 +606,7 @@
 						<input
 							class="halfEmBottomMargin eightyWidthWithSpace floatLeft"
 							type="submit"
-							value="Share"
+							value={shareButtonText}
 						/>
 					{/if}
 

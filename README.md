@@ -12,6 +12,4 @@ A simple todo manager with SvelteKit and Firebase hosted on Vercel (https://todo
 - Emailing stuff
     - improve html
     - checkbox on send email in share modal
-    - try/catch or exception handling on bad email address
-        - SHARE ERROR MESSAGE DISPLAY!!
     - update both / and /list/\[listId]

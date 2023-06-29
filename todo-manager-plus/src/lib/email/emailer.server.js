@@ -19,7 +19,7 @@ export async function sendEmail(userObj, toEmail, listName, shareLink) {
 	try {
 		{
 			// send email to other user
-			const subject = `Todo list shared with you: '${listName} (from ${userObj.name})'`;
+			const subject = `Todo list shared with you: '${listName}' (from ${userObj.name})`;
 			const text = `${userObj.name} (${userObj.email}) has shared a todo list with you. Click on the link to view the list: ${shareLink}`;
 
 			// TODO: improve this html
