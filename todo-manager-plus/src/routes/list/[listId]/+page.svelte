@@ -20,7 +20,7 @@
 
 	import { onDestroy, onMount } from 'svelte';
 	import { writable } from 'svelte/store';
-	import { fly } from 'svelte/transition';
+	import { fly, slide } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 
 	import Modal from '$lib/components/Modal.svelte';
@@ -72,6 +72,8 @@
 	let editingOrder = false;
 
 	let todos = [];
+	let finishedChangedKeys = {};
+
 	let unsubFromTodos = () => {};
 	let unsubFromDoc = () => {};
 	let unsubFromUser = () => {};
@@ -139,6 +141,7 @@
 	}
 
 	function updateTodoFinished(id, finished) {
+		finishedChangedKeys[id] = finished;
 		updateSubCollectionFinished(data.id, id, finished);
 	}
 
@@ -437,57 +440,65 @@
 							<th class="zeroWidth zeroWidthPadding"><strong>Order</strong></th>
 						{/if}
 						<th><strong>Name</strong></th>
-						<th class="zeroWidth zeroWidthPadding"><strong>Done</strong></th>
+						<th
+							title="Marking something as done does not delete it"
+							class="zeroWidth zeroWidthPadding"><strong>Done</strong></th
+						>
 						<th />
 						<th />
 					</tr>
 				</thead>
 				<tbody>
 					{#each todos as todo, index (todo.id)}
-						<tr in:fly={{ duration: 300, x: -200 }} out:fly={{ duration: 300, x: 200 }}>
-							{#if editingOrder}
-								<td class="zeroWidth zeroWidthPadding">
-									{#if todos[index - 1] && todos[index - 1].finished == todo.finished}
-										<button on:click={moveTodoUp(todo.id)} class="tiny tinyMargin">
-											&uarr;
-										</button>
-									{/if}
-									{#if todos[index + 1] && todos[index + 1].finished == todo.finished}
-										<button on:click={moveTodoDown(todo.id)} class="tiny">
-											&darr;
-										</button>
+						{#key finishedChangedKeys[todo.id]}
+							<tr
+								in:fly|global={{ duration: 300, x: -200 }}
+								out:fly|global={{ duration: 300, x: 200 }}
+							>
+								{#if editingOrder}
+									<td class="zeroWidth zeroWidthPadding">
+										{#if todos[index - 1] && todos[index - 1].finished == todo.finished}
+											<button on:click={moveTodoUp(todo.id)} class="tiny tinyMargin">
+												&uarr;
+											</button>
+										{/if}
+										{#if todos[index + 1] && todos[index + 1].finished == todo.finished}
+											<button on:click={moveTodoDown(todo.id)} class="tiny">
+												&darr;
+											</button>
+										{/if}
+									</td>
+								{/if}
+								<td class="breakWord">
+									{#if todo.finished}
+										<del>{todo.name}</del>
+									{:else}
+										{todo.name}
 									{/if}
 								</td>
-							{/if}
-							<td class="breakWord">
-								{#if todo.finished}
-									<del>{todo.name}</del>
-								{:else}
-									{todo.name}
-								{/if}
-							</td>
-							<td>
-								<input
-									type="checkbox"
-									bind:checked={todo.finished}
-									on:change={updateTodoFinished(todo.id, todo.finished)}
-								/>
-							</td>
-							<td class="zeroWidth zeroWidthPadding">
-								<kbd
-									on:click|stopPropagation={startEditingTodo(todo.id, todo.name)}
-									on:keydown|stopPropagation={startEditingTodo(todo.id, todo.name)}
-									style="cursor: pointer;">Edit</kbd
-								>
-							</td>
-							<td class="zeroWidth zeroWidthPadding">
-								<kbd
-									on:click|stopPropagation={startDeletingTodo(todo.id)}
-									on:keydown|stopPropagation={startDeletingTodo(todo.id)}
-									style="cursor: pointer;">&#128465;</kbd
-								>
-							</td>
-						</tr>
+								<td>
+									<input
+										type="checkbox"
+										bind:checked={todo.finished}
+										on:change={updateTodoFinished(todo.id, todo.finished)}
+									/>
+								</td>
+								<td class="zeroWidth zeroWidthPadding">
+									<kbd
+										on:click|stopPropagation={startEditingTodo(todo.id, todo.name)}
+										on:keydown|stopPropagation={startEditingTodo(todo.id, todo.name)}
+										style="cursor: pointer;">Edit</kbd
+									>
+								</td>
+								<td class="zeroWidth zeroWidthPadding">
+									<kbd
+										on:click|stopPropagation={startDeletingTodo(todo.id)}
+										on:keydown|stopPropagation={startDeletingTodo(todo.id)}
+										style="cursor: pointer;">&#128465;</kbd
+									>
+								</td>
+							</tr>
+						{/key}
 					{/each}
 				</tbody>
 			</table>
