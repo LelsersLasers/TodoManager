@@ -97,13 +97,14 @@
 	});
 
 	let createListText = '';
+	let creatingList = false;
 	function createList() {
+		creatingList = true;
 		createListText = createListText.trim();
 		if (createListText.length === 0) return;
 
+		// will redirect to the list
 		createMainCollection(createListText);
-		createListText = '';
-		showCreateListModal = false;
 	}
 
 	function startEditingList(id, name) {
@@ -364,7 +365,6 @@
 				> with your Google account to start managing your todos!
 			</p>
 			{#if data.shareListName}
-				<!-- TODO: wording -->
 				<p style="text-align: center;">
 					Upon signing in, you will be redirected to recently shared list: <em
 						>{data.shareListName}</em
@@ -481,7 +481,11 @@
 		<div class="stickyFooter zeroBottomMargin textAlignCenter">
 			<button
 				class="footerWidth zeroBottomMargin marginZeroAuto nintyFiveWidth"
-				on:click={() => (showCreateListModal = true)}
+				on:click={() => {
+					showCreateListModal = true;
+					createListText = '';
+					creatingList = false;
+				}}
 			>
 				Create new list
 			</button>
@@ -503,8 +507,12 @@
 						spellcheck="true"
 						bind:value={createListText}
 					/>
-					<!-- floatRight just makes it float to get the margins/padding correct -->
-					<input class="floatRight" type="submit" value="Create" />
+					{#if creatingList}
+						<button class="floatRight" aria-busy="true">......</button>
+					{:else}
+						<!-- floatRight just makes it float to get the margins/padding correct -->
+						<input class="floatRight" type="submit" value="Create" />
+					{/if}
 				</form>
 			</article>
 		</Modal>
@@ -566,7 +574,7 @@
 				<form method="POST" on:submit|preventDefault={shareList}>
 					<h1 class="zeroBottomMargin"><label for="shareList">Share list</label></h1>
 					<input
-						type="text"
+						type="email"
 						id="shareList"
 						name="shareList"
 						placeholder={shareMessage}

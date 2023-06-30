@@ -17,12 +17,17 @@
 		updateMainCollection,
 		deleteMainCollection
 	} from '$lib/firebase/firebase';
+
 	import { onDestroy, onMount } from 'svelte';
+	import { writable } from 'svelte/store';
+	import { fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 
 	import Modal from '$lib/components/Modal.svelte';
 
 	let user;
+
+	let pageTitle = writable('Todo Manager+: Loading...');
 
 	let showSignoutModal = false;
 
@@ -93,6 +98,8 @@
 							data.id = docData.id;
 							data.uids = docData.uids;
 							data.createdOn = createdOn;
+
+							pageTitle.set(`Todo Manager+: ${data.name}`);
 
 							if (!loaded) {
 								unsubFromTodos = await listenerSubCollection(data.id, (arr) => {
@@ -348,11 +355,7 @@
 </script>
 
 <svelte:head>
-	{#if !loaded}
-		<title>Todo Manager+: Loading...</title>
-	{:else}
-		<title>Todo Manager+: {data.name}</title>
-	{/if}
+	<title>{$pageTitle}</title>
 </svelte:head>
 
 <header class="zeroBottomPadding">
@@ -441,7 +444,7 @@
 				</thead>
 				<tbody>
 					{#each todos as todo, index (todo.id)}
-						<tr>
+						<tr in:fly={{ duration: 300, x: -200 }} out:fly={{ duration: 300, x: 200 }}>
 							{#if editingOrder}
 								<td class="zeroWidth zeroWidthPadding">
 									{#if todos[index - 1] && todos[index - 1].finished == todo.finished}
@@ -587,7 +590,7 @@
 				<form method="POST" on:submit|preventDefault={shareList}>
 					<h1 class="zeroBottomMargin"><label for="shareList">Share list</label></h1>
 					<input
-						type="text"
+						type="email"
 						id="shareList"
 						name="shareList"
 						placeholder={shareMessage}
