@@ -323,6 +323,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Todo Manager+</title>
+</svelte:head>
+
 <header class="zeroBottomPadding">
 	<hgroup>
 		{#if user}

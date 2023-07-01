@@ -20,7 +20,7 @@
 
 	import { onDestroy, onMount } from 'svelte';
 	import { writable } from 'svelte/store';
-	import { fly, slide } from 'svelte/transition';
+	import { fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 
 	import Modal from '$lib/components/Modal.svelte';
