@@ -72,6 +72,7 @@
 	let editingOrder = false;
 
 	let todos = [];
+	let notAllFinished = false;
 	let finishedChangedKeys = {};
 
 	let unsubFromTodos = () => {};
@@ -256,6 +257,8 @@
 		showEditListModal = true;
 
 		deletingListConfirmation = false;
+
+		notAllFinished = todos.some((t) => !t.finished);
 	}
 	function editList() {
 		updateMainCollection(editingListId, editingListName);
@@ -265,6 +268,15 @@
 		showEditListModal = false;
 
 		deletingListConfirmation = false;
+	}
+	async function toggleFinishedAll() {
+		for (let todo of todos.slice().reverse()) {
+			if (todo.finished != notAllFinished) {
+				finishedChangedKeys[todo.id] = notAllFinished;
+				await updateSubCollectionFinished(data.id, todo.id, notAllFinished);
+			}
+		}
+		notAllFinished = todos.some((t) => !t.finished);
 	}
 
 	function startDeletingList() {
@@ -784,13 +796,41 @@
 						spellcheck="true"
 						bind:value={editingListName}
 					/>
-					<input class="eightyWidthWithSpace floatLeft" type="submit" value="Update" />
-					<input
-						class="twentyWidthWithSpace floatRight zeroPadding"
-						type="reset"
-						value="&#128465;"
-						on:click|preventDefault={startDeletingList}
-					/>
+
+					{#if todos.length > 0}
+						<input
+							class="eightyWidthWithSpace floatLeft halfEmBottomMargin"
+							type="submit"
+							value="Update"
+						/>
+						<input
+							class="twentyWidthWithSpace floatRight halfEmBottomMargin"
+							type="reset"
+							value="&#128465;"
+							on:click|preventDefault={startDeletingList}
+						/>
+
+						{#key notAllFinished}
+							<input
+								class="floatRight zeroPadding"
+								type="reset"
+								value={notAllFinished ? 'Mark all as done' : 'Mark all as todo'}
+								on:click|preventDefault={toggleFinishedAll}
+							/>
+						{/key}
+					{:else}
+						<input
+							class="eightyWidthWithSpace floatLeft zeroPadding"
+							type="submit"
+							value="Update"
+						/>
+						<input
+							class="twentyWidthWithSpace floatRight zeroPadding"
+							type="reset"
+							value="&#128465;"
+							on:click|preventDefault={startDeletingList}
+						/>
+					{/if}
 				</form>
 			</article>
 		</Modal>
