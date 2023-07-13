@@ -72,7 +72,10 @@
 	let editingOrder = false;
 
 	let todos = [];
+
 	let notAllFinished = false;
+	let markingFinishing = false;
+
 	let finishedChangedKeys = {};
 
 	let unsubFromTodos = () => {};
@@ -259,6 +262,7 @@
 		deletingListConfirmation = false;
 
 		notAllFinished = todos.some((t) => !t.finished);
+		markingFinishing = false;
 	}
 	function editList() {
 		updateMainCollection(editingListId, editingListName);
@@ -270,13 +274,14 @@
 		deletingListConfirmation = false;
 	}
 	async function toggleFinishedAll() {
+		markingFinishing = true;
 		for (let todo of todos.slice().reverse()) {
 			if (todo.finished != notAllFinished) {
-				finishedChangedKeys[todo.id] = notAllFinished;
 				await updateSubCollectionFinished(data.id, todo.id, notAllFinished);
 			}
 		}
 		notAllFinished = todos.some((t) => !t.finished);
+		markingFinishing = false;
 	}
 
 	function startDeletingList() {
@@ -810,11 +815,15 @@
 							on:click|preventDefault={startDeletingList}
 						/>
 
-						{#key notAllFinished}
+						{#key notAllFinished && markingFinishing}
 							<input
 								class="floatRight zeroPadding"
 								type="reset"
-								value={notAllFinished ? 'Mark all as done' : 'Mark all as todo'}
+								value={markingFinishing
+									? 'Mark all as ........'
+									: notAllFinished
+									? 'Mark all as done'
+									: 'Mark all as todo'}
 								on:click|preventDefault={toggleFinishedAll}
 							/>
 						{/key}
