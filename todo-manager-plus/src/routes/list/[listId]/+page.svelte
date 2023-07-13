@@ -72,6 +72,10 @@
 	let editingOrder = false;
 
 	let todos = [];
+
+	let notAllFinished = false;
+	let markingFinishing = false;
+
 	let finishedChangedKeys = {};
 
 	let unsubFromTodos = () => {};
@@ -256,6 +260,9 @@
 		showEditListModal = true;
 
 		deletingListConfirmation = false;
+
+		notAllFinished = todos.some((t) => !t.finished);
+		markingFinishing = false;
 	}
 	function editList() {
 		updateMainCollection(editingListId, editingListName);
@@ -265,6 +272,16 @@
 		showEditListModal = false;
 
 		deletingListConfirmation = false;
+	}
+	async function toggleFinishedAll() {
+		markingFinishing = true;
+		for (let todo of todos.slice().reverse()) {
+			if (todo.finished != notAllFinished) {
+				await updateSubCollectionFinished(data.id, todo.id, notAllFinished);
+			}
+		}
+		notAllFinished = todos.some((t) => !t.finished);
+		markingFinishing = false;
 	}
 
 	function startDeletingList() {
@@ -784,13 +801,45 @@
 						spellcheck="true"
 						bind:value={editingListName}
 					/>
-					<input class="eightyWidthWithSpace floatLeft" type="submit" value="Update" />
-					<input
-						class="twentyWidthWithSpace floatRight zeroPadding"
-						type="reset"
-						value="&#128465;"
-						on:click|preventDefault={startDeletingList}
-					/>
+
+					{#if todos.length > 0}
+						<input
+							class="eightyWidthWithSpace floatLeft halfEmBottomMargin"
+							type="submit"
+							value="Update"
+						/>
+						<input
+							class="twentyWidthWithSpace floatRight halfEmBottomMargin"
+							type="reset"
+							value="&#128465;"
+							on:click|preventDefault={startDeletingList}
+						/>
+
+						{#key notAllFinished && markingFinishing}
+							<input
+								class="floatRight zeroPadding"
+								type="reset"
+								value={markingFinishing
+									? 'Mark all as ........'
+									: notAllFinished
+									? 'Mark all as done'
+									: 'Mark all as todo'}
+								on:click|preventDefault={toggleFinishedAll}
+							/>
+						{/key}
+					{:else}
+						<input
+							class="eightyWidthWithSpace floatLeft zeroPadding"
+							type="submit"
+							value="Update"
+						/>
+						<input
+							class="twentyWidthWithSpace floatRight zeroPadding"
+							type="reset"
+							value="&#128465;"
+							on:click|preventDefault={startDeletingList}
+						/>
+					{/if}
 				</form>
 			</article>
 		</Modal>
