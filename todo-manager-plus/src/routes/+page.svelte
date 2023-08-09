@@ -415,7 +415,7 @@
 							<th class="zeroWidth zeroWidthPadding"><strong>Order</strong></th>
 						{/if}
 						<th><strong>Name</strong></th>
-						<th class="zeroWidth zeroWidthPadding"><strong>#</strong></th>
+						<th class="zeroWidth zeroWidthPadding textAlignCenter"><strong>&#x2713;</strong></th> 
 						<th />
 						<th />
 					</tr>
@@ -448,7 +448,11 @@
 								</td>
 							{/if}
 							<td class="breakWord">{list.name}</td>
-							<td class="zeroWidth zeroWidthPadding">{list.count}</td>
+                            {#if list.count != 0}
+                                <td class="zeroWidth zeroWidthPadding textAlignCenter">{(100 * (list.count - list.countTodo) / list.count).toFixed(1)}%</td>
+                            {:else}
+                                <td class="zeroWidth zeroWidthPadding textAlignCenter">{(100 * 0).toFixed(1)}%</td>
+                            {/if}
 							<td class="zeroWidth zeroWidthPadding">
 								<kbd
 									on:click|stopPropagation={startEditingList(list.id, list.name)}
