@@ -103,6 +103,10 @@
 	width: 90vw;
 }
 
+.textAlignCenter {
+    text-align: center;
+}
+
 code {
 	max-width: 100%;
 }

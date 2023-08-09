@@ -64,6 +64,7 @@ lists:
 	- name
 	- timestamp (sorted by this - 2)
 	- count (number of todos)
+    - countTodo (number of unfinished todos)
     - order (sorted by this - 1)
     - uids (array of emails)
 	- todos:
@@ -83,6 +84,7 @@ const mainCollectionQueryParams = [
 	orderBy('order'),
 	orderBy('timestamp', 'desc'),
 	// these are just to make sure the data contains these fields
+    orderBy('countTodo'),
 	orderBy('count'),
 	orderBy('name')
 ];
@@ -114,6 +116,7 @@ export async function createMainCollection(name) {
 	const docData = {
 		name: trimedName,
 		count: 0,
+        countTodo: 0,
 		order: 0,
 		uids: [auth.currentUser.email],
 		timestamp: serverTimestamp()
@@ -340,12 +343,16 @@ export async function createSubCollection(id, name) {
 
 	// update list.count
 	await updateDoc(docRef, {
-		count: increment(1)
+		count: increment(1),
+        countTodo: increment(1)
 	});
 }
 
 export async function deleteSubCollection(id, subId) {
 	const docRef = doc(db, mainCollectionId, id, subCollectionId, subId);
+    const docSnap = await getDoc(docRef);
+    const docData = docSnap.data();
+
 	await deleteDoc(docRef);
 
 	// update list.count
@@ -353,6 +360,13 @@ export async function deleteSubCollection(id, subId) {
 	await updateDoc(docRef2, {
 		count: increment(-1)
 	});
+
+    // if deleted doc is not finished, update countTodo
+    if (!docData.finished) {
+        await updateDoc(docRef2, {
+            countTodo: increment(-1)
+        });
+    }
 }
 
 export async function updateSubCollection(id, subId, newName) {
@@ -369,10 +383,17 @@ export async function updateSubCollection(id, subId, newName) {
 
 export async function updateSubCollectionFinished(id, subId, newFinished) {
 	const docRef = doc(db, mainCollectionId, id, subCollectionId, subId);
+
 	await updateDoc(docRef, {
 		finished: newFinished,
 		timestamp: serverTimestamp()
 	});
+
+    // update list.countTodo
+    const docRef2 = doc(db, mainCollectionId, id);
+    await updateDoc(docRef2, {
+        countTodo: newFinished ? increment(-1) : increment(1)
+    });
 }
 
 export async function updateSubCollectionOrder(id, subId, newOrder) {

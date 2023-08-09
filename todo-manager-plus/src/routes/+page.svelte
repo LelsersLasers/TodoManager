@@ -344,7 +344,7 @@
 				class="floatRight"
 				src="https://static.thenounproject.com/png/711255-200.png"
 				alt=""
-				title="Not signed in. Click to sign in with Google."
+				title="Not signed in. Click to continue with Google."
 				on:click={signIn}
 				on:keydown={signIn}
 				style="cursor: pointer;"
@@ -363,10 +363,10 @@
 		<article class="zeroTopMargin" aria-busy="true" />
 	{:else if !user}
 		<article class="zeroTopMargin">
-			<h2 style="text-align: center;">Sign in to get started!</h2>
+			<h2 style="text-align: center;">Continue with Google to get started!</h2>
 			<p style="text-align: center;">
-				<kbd on:click={signIn} on:keydown={signIn} style="cursor: pointer;">Sign in</kbd
-				> with your Google account to start managing your todos!
+				<kbd on:click={signIn} on:keydown={signIn} style="cursor: pointer;">Continue with Google</kbd
+				> to start managing your todos!
 			</p>
 			{#if data.shareListName}
 				<p style="text-align: center;">
@@ -382,7 +382,7 @@
 				class="footerWidth zeroBottomMargin marginZeroAuto nintyFiveWidth"
 				on:click={signIn}
 			>
-				Sign in with Google
+				Continue with Google
 			</button>
 		</div>
 	{:else if snapshotLoading}
@@ -415,7 +415,7 @@
 							<th class="zeroWidth zeroWidthPadding"><strong>Order</strong></th>
 						{/if}
 						<th><strong>Name</strong></th>
-						<th class="zeroWidth zeroWidthPadding"><strong>#</strong></th>
+						<th class="zeroWidth zeroWidthPadding textAlignCenter"><strong>&#x2713;</strong></th> 
 						<th />
 						<th />
 					</tr>
@@ -448,7 +448,11 @@
 								</td>
 							{/if}
 							<td class="breakWord">{list.name}</td>
-							<td class="zeroWidth zeroWidthPadding">{list.count}</td>
+                            {#if list.count != 0}
+                                <td class="zeroWidth zeroWidthPadding textAlignCenter">{(100 * (list.count - list.countTodo) / list.count).toFixed(1)}%</td>
+                            {:else}
+                                <td class="zeroWidth zeroWidthPadding textAlignCenter">{(100 * 0).toFixed(1)}%</td>
+                            {/if}
 							<td class="zeroWidth zeroWidthPadding">
 								<kbd
 									on:click|stopPropagation={startEditingList(list.id, list.name)}
