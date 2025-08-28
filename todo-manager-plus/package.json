@@ -25,5 +25,8 @@
 		"@sveltejs/adapter-vercel": "^3.0.1",
 		"firebase": "^9.22.2",
 		"nodemailer": "^6.9.3"
-	}
+	},
+	"engines": {
+	  "node": "20.x"
+  }
 }
